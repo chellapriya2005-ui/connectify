@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, render_template_string, request, jsonify, session
+from flask import Flask, render_template_string, request, jsonify, session, send_from_directory  # ← ADDED send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit, join_room
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,6 +16,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'mov', 'avi', 'mkv', 'webm'}
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # ← ADDED for video
+app.config['TEMPLATES_AUTO_RELOAD'] = True    # ← ADDED
 
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -24,6 +26,11 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 os.makedirs('static/uploads/videos', exist_ok=True)
 os.makedirs('static/uploads/reels', exist_ok=True)
 os.makedirs('static/uploads/stories', exist_ok=True)
+
+# ==================== VIDEO SERVING ROUTE ====================
+@app.route('/static/uploads/<path:filename>')  # ← NEW ROUTE for videos
+def serve_video(filename):
+    return send_from_directory('static/uploads', filename)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
