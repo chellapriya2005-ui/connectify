@@ -589,6 +589,9 @@ HTML_TEMPLATE = '''
         let currentUser = null;
         let socket = null;
         let currentChatUser = null;
+        
+        // Fix for Render - use full URL
+        const BASE_URL = window.location.origin;
 
         function switchTab(tab) {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -612,7 +615,7 @@ HTML_TEMPLATE = '''
             };
             
             try {
-                const res = await fetch('/register', {
+                const res = await fetch(BASE_URL + '/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
@@ -629,7 +632,7 @@ HTML_TEMPLATE = '''
                     alert('Registration failed: ' + (result.error || 'Unknown error'));
                 }
             } catch (error) {
-                alert('Error connecting to server');
+                alert('Error connecting to server: ' + error);
             }
         }
 
@@ -640,7 +643,7 @@ HTML_TEMPLATE = '''
             };
             
             try {
-                const res = await fetch('/login', {
+                const res = await fetch(BASE_URL + '/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
@@ -654,22 +657,22 @@ HTML_TEMPLATE = '''
                     connectSocket();
                     showPage('home');
                 } else {
-                    alert('Login failed');
+                    alert('Login failed - Check username/password');
                 }
             } catch (error) {
-                alert('Error connecting to server');
+                alert('Error connecting to server: ' + error);
             }
         }
 
         function connectSocket() {
-            socket = io();
+            socket = io(BASE_URL);
             socket.on('user_status', updateUserStatus);
             socket.on('new_message', handleNewMessage);
             socket.emit('join', {user_id: currentUser.id});
         }
 
         async function logout() {
-            await fetch('/logout');
+            await fetch(BASE_URL + '/logout');
             if (socket) socket.disconnect();
             document.getElementById('app').style.display = 'none';
             document.getElementById('auth').style.display = 'flex';
@@ -683,7 +686,7 @@ HTML_TEMPLATE = '''
 
         async function deleteAccount() {
             try {
-                const res = await fetch('/delete-account', {
+                const res = await fetch(BASE_URL + '/delete-account', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'}
                 });
@@ -717,7 +720,7 @@ HTML_TEMPLATE = '''
 
         async function loadHome() {
             try {
-                const res = await fetch('/api/videos');
+                const res = await fetch(BASE_URL + '/api/videos');
                 const videos = await res.json();
                 
                 let html = '<div class="feed">';
@@ -751,7 +754,7 @@ HTML_TEMPLATE = '''
 
         async function loadReels() {
             try {
-                const res = await fetch('/api/reels');
+                const res = await fetch(BASE_URL + '/api/reels');
                 const reels = await res.json();
                 
                 let html = '<div class="reels-grid">';
@@ -781,7 +784,7 @@ HTML_TEMPLATE = '''
 
         async function loadChatList() {
             try {
-                const res = await fetch('/api/chat/users');
+                const res = await fetch(BASE_URL + '/api/chat/users');
                 const users = await res.json();
                 
                 let html = '<h3>Messages</h3><div class="chat-list">';
@@ -811,8 +814,8 @@ HTML_TEMPLATE = '''
         async function openChat(userId) {
             try {
                 const [usersRes, msgsRes] = await Promise.all([
-                    fetch('/api/chat/users'),
-                    fetch(`/api/messages/${userId}`)
+                    fetch(BASE_URL + '/api/chat/users'),
+                    fetch(BASE_URL + `/api/messages/${userId}`)
                 ]);
                 const users = await usersRes.json();
                 const messages = await msgsRes.json();
@@ -888,15 +891,15 @@ HTML_TEMPLATE = '''
         async function loadProfile(userId) {
             try {
                 const [profileRes, videosRes] = await Promise.all([
-                    fetch(`/api/profile/${userId}`),
-                    fetch(`/api/user-videos/${userId}`)
+                    fetch(BASE_URL + `/api/profile/${userId}`),
+                    fetch(BASE_URL + `/api/user-videos/${userId}`)
                 ]);
                 const profile = await profileRes.json();
                 const videos = await videosRes.json();
                 
                 let followBtn = '';
                 if (userId !== currentUser.id) {
-                    const statusRes = await fetch(`/api/follow/status/${userId}`);
+                    const statusRes = await fetch(BASE_URL + `/api/follow/status/${userId}`);
                     const status = await statusRes.json();
                     followBtn = `<button class="follow-btn ${status.status === 'following' ? 'following' : ''}" onclick="toggleFollow(${userId})">
                         ${status.status === 'following' ? 'Following ✓' : 'Follow'}
@@ -938,7 +941,7 @@ HTML_TEMPLATE = '''
 
         async function toggleFollow(userId) {
             try {
-                const res = await fetch(`/api/follow/${userId}`, {method: 'POST'});
+                const res = await fetch(BASE_URL + `/api/follow/${userId}`, {method: 'POST'});
                 await res.json();
                 loadProfile(userId);
             } catch (error) {
@@ -973,7 +976,7 @@ HTML_TEMPLATE = '''
                 }
                 
                 try {
-                    const res = await fetch(`/upload/${type}`, {
+                    const res = await fetch(BASE_URL + `/upload/${type}`, {
                         method: 'POST',
                         body: formData
                     });
