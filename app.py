@@ -36,23 +36,28 @@ HTML_TEMPLATE = '''
         .post { background: white; border-radius: 12px; border: 1px solid #dbdbdb; margin-bottom: 30px; }
         .post-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
         .post-header img { width: 40px; height: 40px; border-radius: 50%; }
+        
+        /* Fixed video container for both landscape and portrait */
         .video-container { 
             width: 100%; 
             background: black; 
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 200px;
         }
         .video-container video { 
-            width: 100%; 
-            max-height: 500px; 
-            display: block; 
-            object-fit: contain;  /* This preserves aspect ratio - works for both landscape and portrait */
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: scale-down;
             background: black;
         }
         
         .reels-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
         .reel { background: white; border-radius: 12px; overflow: hidden; }
+        /* Fixed reel container */
         .reel-media { 
             aspect-ratio: 9/16; 
             background: black;
@@ -61,16 +66,18 @@ HTML_TEMPLATE = '''
             align-items: center;
         }
         .reel-media video { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain;  /* Changed from 'cover' to 'contain' to show full video */
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: scale-down;
             background: black;
         }
         
         .chat-container { background: white; border-radius: 12px; height: 70vh; display: flex; flex-direction: column; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
         .message { max-width: 70%; padding: 10px 15px; border-radius: 18px; margin: 5px 0; }
-        .message.sent { align-self: flex-end; background: #667eea; color: white; margin-left: auto; }
+        .message.sent { align-self: flex-end; background: #667eea; color: white; }
         .message.received { align-self: flex-start; background: #f0f2f5; }
         .chat-input { display: flex; padding: 15px; gap: 10px; }
         .chat-input input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; }
@@ -91,8 +98,19 @@ HTML_TEMPLATE = '''
         .chat-item img { width: 50px; height: 50px; border-radius: 50%; }
         .unread-badge { background: #667eea; color: white; border-radius: 50%; padding: 5px 10px; font-size: 12px; }
         
-        /* Profile posts grid fix */
-        .profile-posts video {
+        /* Profile posts grid */
+        .profile-posts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .profile-post {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            overflow: hidden;
+        }
+        .profile-post video {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -104,6 +122,7 @@ HTML_TEMPLATE = '''
             .main { margin-left: 0; }
             .profile-info { flex-direction: column; gap: 20px; }
             .profile-stats { gap: 20px; }
+            .reels-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
         }
     </style>
 </head>
@@ -502,11 +521,11 @@ HTML_TEMPLATE = '''
                             </div>
                         </div>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 5px;">
+                    <div class="profile-posts">
                 `;
                 
                 videos.forEach(v => {
-                    html += `<div style="aspect-ratio: 1; background: #f0f0f0;">
+                    html += `<div class="profile-post">
                         <video src="${BASE_URL}${v.file_path}" style="width: 100%; height: 100%; object-fit: cover;"></video>
                     </div>`;
                 });
