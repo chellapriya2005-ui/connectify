@@ -33,7 +33,7 @@ HTML_TEMPLATE = '''
         .main { margin-left: 250px; padding: 20px; }
         
         .feed { max-width: 800px; margin: 0 auto; }
-        .post { background: white; border-radius: 12px; border: 1px solid #dbdbdb; margin-bottom: 30px; }
+        .post { background: white; border-radius: 12px; border: 1px solid #dbdbdb; margin-bottom: 30px; overflow: hidden; }
         .post-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
         .post-header img { width: 40px; height: 40px; border-radius: 50%; }
         
@@ -53,6 +53,137 @@ HTML_TEMPLATE = '''
             max-height: 500px;
             object-fit: scale-down;
             background: black;
+        }
+        
+        .post-actions {
+            padding: 15px;
+            display: flex;
+            gap: 20px;
+        }
+        .post-actions i {
+            font-size: 26px;
+            cursor: pointer;
+        }
+        .post-actions i.fas.fa-heart {
+            color: #ed4956;
+        }
+        .fa-bookmark { margin-left: auto; }
+        
+        .post-likes {
+            padding: 0 15px 8px;
+            font-weight: bold;
+        }
+        .post-caption {
+            padding: 0 15px 15px;
+        }
+        
+        /* Comments Section */
+        .comments-section {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .comment {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+        
+        .comment-content {
+            flex: 1;
+        }
+        
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .comment-username {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .comment-time {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .comment-text {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .comment-actions {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .comment-action {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .comment-action:hover {
+            color: #667eea;
+        }
+        
+        .comment-action.liked {
+            color: #ed4956;
+        }
+        
+        .comment-action.liked i {
+            font-weight: 900;
+        }
+        
+        .reply-section {
+            margin-left: 42px;
+            margin-top: 10px;
+            padding-left: 10px;
+            border-left: 2px solid #eee;
+        }
+        
+        .reply-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .reply-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .reply-input button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .view-replies {
+            color: #667eea;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
         }
         
         .reels-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
@@ -187,6 +318,7 @@ HTML_TEMPLATE = '''
         let currentUser = null;
         let socket = null;
         let currentChatUser = null;
+        let currentVideoId = null;
         
         // Fix for Render - use full URL
         const BASE_URL = window.location.origin;
@@ -266,6 +398,8 @@ HTML_TEMPLATE = '''
             socket = io(BASE_URL);
             socket.on('user_status', updateUserStatus);
             socket.on('new_message', handleNewMessage);
+            socket.on('new_comment', handleNewComment);
+            socket.on('new_reply', handleNewReply);
             socket.emit('join', {user_id: currentUser.id});
         }
 
@@ -316,6 +450,267 @@ HTML_TEMPLATE = '''
             else if (page === 'profile') loadProfile(currentUser.id);
         }
 
+        // ==================== LIKE FUNCTIONS ====================
+        async function likeVideo(videoId, element) {
+            try {
+                const res = await fetch(BASE_URL + '/api/like/' + videoId, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await res.json();
+                if (data.success) {
+                    element.classList.toggle('far');
+                    element.classList.toggle('fas');
+                    // Update like count in UI
+                    const likeSpan = element.closest('.post-actions').nextElementSibling;
+                    if (likeSpan && likeSpan.classList.contains('post-likes')) {
+                        likeSpan.innerText = data.likes + ' likes';
+                    }
+                }
+            } catch (error) {
+                console.error('Error liking video:', error);
+            }
+        }
+
+        // ==================== COMMENT FUNCTIONS ====================
+        async function loadComments(videoId, containerId, page = 1) {
+            try {
+                const res = await fetch(BASE_URL + `/api/comments/${videoId}?page=${page}`);
+                const data = await res.json();
+                
+                let html = '';
+                data.comments.forEach(c => {
+                    html += renderComment(c);
+                });
+                
+                if (data.has_next) {
+                    html += `<div class="load-more-comments" onclick="loadComments(${videoId}, '${containerId}', ${page + 1})" style="text-align:center; padding:10px; color:#667eea; cursor:pointer;">Load more comments...</div>`;
+                }
+                
+                document.getElementById(containerId).innerHTML = html;
+            } catch (error) {
+                console.error('Error loading comments:', error);
+            }
+        }
+
+        function renderComment(c) {
+            const timeAgo = getTimeAgo(c.created_at);
+            const likedClass = c.user_liked ? 'liked' : '';
+            const heartIcon = c.user_liked ? 'fas' : 'far';
+            
+            return `
+                <div class="comment" id="comment-${c.id}">
+                    <img src="${c.user_pic}" class="comment-avatar">
+                    <div class="comment-content">
+                        <div class="comment-header">
+                            <span class="comment-username">${c.username}</span>
+                            <span class="comment-time">${timeAgo}</span>
+                        </div>
+                        <div class="comment-text">${c.content}</div>
+                        <div class="comment-actions">
+                            <span class="comment-action ${likedClass}" onclick="likeComment(${c.id}, this)">
+                                <i class="${heartIcon} fa-heart"></i> ${c.likes}
+                            </span>
+                            <span class="comment-action" onclick="showReplyInput(${c.id})">
+                                <i class="far fa-comment"></i> Reply
+                            </span>
+                            ${c.user_id === currentUser.id ? `
+                                <span class="comment-action" onclick="deleteComment(${c.id})">
+                                    <i class="far fa-trash-alt"></i> Delete
+                                </span>
+                            ` : ''}
+                        </div>
+                        <div class="reply-section" id="replies-${c.id}"></div>
+                        ${c.replies_count > 0 ? `
+                            <div class="view-replies" onclick="loadReplies(${c.id})">
+                                View ${c.replies_count} ${c.replies_count === 1 ? 'reply' : 'replies'} ▼
+                            </div>
+                        ` : ''}
+                        <div class="reply-input" id="reply-input-${c.id}" style="display:none;">
+                            <input type="text" placeholder="Write a reply..." id="reply-text-${c.id}">
+                            <button onclick="addReply(${c.id})">Post</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadReplies(commentId) {
+            try {
+                const res = await fetch(BASE_URL + `/api/comments/${commentId}/replies`);
+                const replies = await res.json();
+                
+                let html = '';
+                replies.forEach(r => {
+                    const timeAgo = getTimeAgo(r.created_at);
+                    const likedClass = r.user_liked ? 'liked' : '';
+                    const heartIcon = r.user_liked ? 'fas' : 'far';
+                    
+                    html += `
+                        <div class="comment" id="comment-${r.id}" style="margin-bottom:10px;">
+                            <img src="${r.user_pic}" class="comment-avatar">
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-username">${r.username}</span>
+                                    <span class="comment-time">${timeAgo}</span>
+                                </div>
+                                <div class="comment-text">${r.content}</div>
+                                <div class="comment-actions">
+                                    <span class="comment-action ${likedClass}" onclick="likeComment(${r.id}, this)">
+                                        <i class="${heartIcon} fa-heart"></i> ${r.likes}
+                                    </span>
+                                    ${r.user_id === currentUser.id ? `
+                                        <span class="comment-action" onclick="deleteComment(${r.id})">
+                                            <i class="far fa-trash-alt"></i> Delete
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById(`replies-${commentId}`).innerHTML = html;
+            } catch (error) {
+                console.error('Error loading replies:', error);
+            }
+        }
+
+        async function likeComment(commentId, element) {
+            try {
+                const res = await fetch(BASE_URL + `/api/comment/${commentId}/like`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    const heartIcon = element.querySelector('i');
+                    if (data.liked) {
+                        heartIcon.classList.remove('far');
+                        heartIcon.classList.add('fas');
+                        element.classList.add('liked');
+                    } else {
+                        heartIcon.classList.remove('fas');
+                        heartIcon.classList.add('far');
+                        element.classList.remove('liked');
+                    }
+                    element.innerHTML = `<i class="${heartIcon.className}"></i> ${data.likes}`;
+                }
+            } catch (error) {
+                console.error('Error liking comment:', error);
+            }
+        }
+
+        function showReplyInput(commentId) {
+            document.getElementById(`reply-input-${commentId}`).style.display = 'flex';
+        }
+
+        async function addReply(parentId) {
+            const input = document.getElementById(`reply-text-${parentId}`);
+            const content = input.value.trim();
+            if (!content) return;
+            
+            try {
+                const res = await fetch(BASE_URL + '/api/comment', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        video_id: currentVideoId,
+                        parent_id: parentId,
+                        content: content
+                    })
+                });
+                
+                if (res.ok) {
+                    input.value = '';
+                    document.getElementById(`reply-input-${parentId}`).style.display = 'none';
+                    loadReplies(parentId);
+                }
+            } catch (error) {
+                console.error('Error adding reply:', error);
+            }
+        }
+
+        async function deleteComment(commentId) {
+            if (!confirm('Delete this comment?')) return;
+            
+            try {
+                const res = await fetch(BASE_URL + `/api/comment/${commentId}/delete`, {
+                    method: 'DELETE'
+                });
+                
+                if (res.ok) {
+                    document.getElementById(`comment-${commentId}`).remove();
+                }
+            } catch (error) {
+                console.error('Error deleting comment:', error);
+            }
+        }
+
+        function handleNewComment(data) {
+            const commentsList = document.getElementById(`comments-list-${data.video_id}`);
+            if (commentsList) {
+                const commentHtml = renderComment(data.comment);
+                commentsList.insertAdjacentHTML('afterbegin', commentHtml);
+            }
+        }
+
+        function handleNewReply(data) {
+            const repliesSection = document.getElementById(`replies-${data.parent_id}`);
+            if (repliesSection) {
+                const replyHtml = renderComment(data.comment);
+                repliesSection.insertAdjacentHTML('beforeend', replyHtml);
+            }
+        }
+
+        function getTimeAgo(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h`;
+            const days = Math.floor(hours / 24);
+            if (days < 7) return `${days}d`;
+            return date.toLocaleDateString();
+        }
+
+        function toggleComments(videoId) {
+            const comments = document.getElementById(`comments-${videoId}`);
+            if (comments) {
+                comments.style.display = comments.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        async function addComment(videoId) {
+            const input = document.getElementById(`comment-input-${videoId}`);
+            const content = input.value.trim();
+            if (!content) return;
+            
+            try {
+                const res = await fetch(BASE_URL + '/api/comment', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        video_id: videoId,
+                        content: content
+                    })
+                });
+                
+                if (res.ok) {
+                    input.value = '';
+                    loadComments(videoId, `comments-list-${videoId}`);
+                }
+            } catch (error) {
+                console.error('Error adding comment:', error);
+            }
+        }
+
+        // ==================== LOAD HOME WITH COMMENTS ====================
         async function loadHome() {
             try {
                 const res = await fetch(BASE_URL + '/api/videos');
@@ -326,8 +721,9 @@ HTML_TEMPLATE = '''
                     html += '<p style="text-align: center; padding: 50px;">No videos yet. Be the first to upload!</p>';
                 } else {
                     videos.forEach(v => {
+                        currentVideoId = v.id;
                         html += `
-                            <div class="post">
+                            <div class="post" id="post-${v.id}">
                                 <div class="post-header">
                                     <img src="${v.profile_pic}">
                                     <div><strong>${v.full_name}</strong></div>
@@ -335,9 +731,22 @@ HTML_TEMPLATE = '''
                                 <div class="video-container">
                                     <video src="${BASE_URL}${v.file_path}" controls playsinline></video>
                                 </div>
-                                <div style="padding: 15px;">
-                                    <strong>${v.username}</strong> ${v.title}<br>
-                                    <small>❤️ ${v.likes} likes • 👁️ ${v.views} views</small>
+                                <div class="post-actions">
+                                    <i class="far fa-heart" onclick="likeVideo(${v.id}, this)"></i>
+                                    <i class="far fa-comment" onclick="toggleComments(${v.id})"></i>
+                                    <i class="far fa-paper-plane"></i>
+                                    <i class="far fa-bookmark"></i>
+                                </div>
+                                <div class="post-likes">${v.likes} likes</div>
+                                <div class="post-caption">
+                                    <strong>${v.username}</strong> ${v.title}
+                                </div>
+                                <div class="comments-section" id="comments-${v.id}" style="display:none;">
+                                    <div id="comments-list-${v.id}"></div>
+                                    <div style="display:flex; gap:10px; margin-top:15px; padding:10px; border-top:1px solid #eee;">
+                                        <input type="text" id="comment-input-${v.id}" style="flex:1; padding:8px; border:1px solid #ddd; border-radius:20px;" placeholder="Add comment...">
+                                        <button onclick="addComment(${v.id})" style="background:#667eea; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer;">Post</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -345,6 +754,12 @@ HTML_TEMPLATE = '''
                 }
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
+                
+                // Load comments for each video
+                videos.forEach(v => {
+                    loadComments(v.id, `comments-list-${v.id}`);
+                });
+                
             } catch (error) {
                 console.error('Error loading home:', error);
             }
