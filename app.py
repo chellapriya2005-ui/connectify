@@ -995,6 +995,7 @@ HTML_TEMPLATE = '''
 </html>
 '''
 
+# ==================== HOME ROUTE ====================
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE)
