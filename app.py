@@ -36,12 +36,36 @@ HTML_TEMPLATE = '''
         .post { background: white; border-radius: 12px; border: 1px solid #dbdbdb; margin-bottom: 30px; }
         .post-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
         .post-header img { width: 40px; height: 40px; border-radius: 50%; }
-        .video-container video { width: 100%; max-height: 500px; }
+        .video-container { 
+            width: 100%; 
+            background: black; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .video-container video { 
+            width: 100%; 
+            max-height: 500px; 
+            display: block; 
+            object-fit: contain;  /* This preserves aspect ratio - works for both landscape and portrait */
+            background: black;
+        }
         
         .reels-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
         .reel { background: white; border-radius: 12px; overflow: hidden; }
-        .reel-media { aspect-ratio: 9/16; background: black; }
-        .reel-media video { width: 100%; height: 100%; object-fit: cover; }
+        .reel-media { 
+            aspect-ratio: 9/16; 
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .reel-media video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain;  /* Changed from 'cover' to 'contain' to show full video */
+            background: black;
+        }
         
         .chat-container { background: white; border-radius: 12px; height: 70vh; display: flex; flex-direction: column; }
         .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
@@ -66,6 +90,21 @@ HTML_TEMPLATE = '''
         .chat-item:hover { background: #f5f5f5; }
         .chat-item img { width: 50px; height: 50px; border-radius: 50%; }
         .unread-badge { background: #667eea; color: white; border-radius: 50%; padding: 5px 10px; font-size: 12px; }
+        
+        /* Profile posts grid fix */
+        .profile-posts video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Responsive for mobile */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .profile-info { flex-direction: column; gap: 20px; }
+            .profile-stats { gap: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -275,7 +314,7 @@ HTML_TEMPLATE = '''
                                     <div><strong>${v.full_name}</strong></div>
                                 </div>
                                 <div class="video-container">
-                                    <video src="${BASE_URL}${v.file_path}" controls></video>
+                                    <video src="${BASE_URL}${v.file_path}" controls playsinline></video>
                                 </div>
                                 <div style="padding: 15px;">
                                     <strong>${v.username}</strong> ${v.title}<br>
@@ -305,7 +344,7 @@ HTML_TEMPLATE = '''
                         html += `
                             <div class="reel">
                                 <div class="reel-media">
-                                    <video src="${BASE_URL}${r.file_path}" loop muted></video>
+                                    <video src="${BASE_URL}${r.file_path}" loop muted playsinline></video>
                                 </div>
                                 <div style="padding: 10px;">
                                     <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%;"> ${r.full_name}<br>
