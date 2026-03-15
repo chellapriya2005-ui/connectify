@@ -26,13 +26,49 @@ HTML_TEMPLATE = '''
         .app { display: none; }
         
         /* Desktop Sidebar */
-        .sidebar { width: 250px; height: 100vh; background: white; border-right: 1px solid #dbdbdb; position: fixed; left: 0; top: 0; padding: 20px; }
+        .sidebar { width: 220px; height: 100vh; background: white; border-right: 1px solid #dbdbdb; position: fixed; left: 0; top: 0; padding: 20px; }
         .sidebar .logo { font-size: 24px; font-weight: bold; margin-bottom: 30px; color: #667eea; }
         .sidebar ul { list-style: none; }
         .sidebar li { padding: 15px; margin: 5px 0; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .sidebar li:hover { background: #f5f5f5; }
         .sidebar li.active { background: #f0f2f5; }
         .sidebar li.delete { color: #ff4444; }
+        
+        /* Top Header - NEW */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 220px; /* because sidebar exists */
+            right: 0;
+            height: 60px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 99;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            object-fit: cover;
+            border: 2px solid #667eea;
+        }
         
         /* Mobile Header */
         .mobile-header {
@@ -61,7 +97,6 @@ HTML_TEMPLATE = '''
             cursor: pointer;
             object-fit: cover;
             border: 2px solid #667eea;
-            background-color: #f0f0f0;
         }
         
         /* Mobile Dropdown Menu */
@@ -109,8 +144,12 @@ HTML_TEMPLATE = '''
             color: #ed4956;
         }
         
-        /* Main Content */
-        .main { margin-left: 250px; padding: 20px; }
+        /* Main Content - Adjusted for header */
+        .main { 
+            margin-left: 220px; 
+            margin-top: 60px;
+            padding: 20px; 
+        }
         
         .feed { max-width: 800px; margin: 0 auto; }
         .post { background: white; border-radius: 12px; border: 1px solid #dbdbdb; margin-bottom: 30px; overflow: hidden; }
@@ -461,6 +500,7 @@ HTML_TEMPLATE = '''
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .sidebar { display: none; }
+            .top-header { display: none; }
             .mobile-header { display: flex; }
             .main { 
                 margin-left: 0; 
@@ -511,10 +551,43 @@ HTML_TEMPLATE = '''
             </ul>
         </div>
 
-        <!-- Mobile Header with Profile Icon - FIXED: Changed from div to img with default path -->
+        <!-- Top Header - Desktop -->
+        <header class="top-header">
+            <div class="header-title">Connectify</div>
+            <div class="profile-section">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-icon" id="desktopProfileIcon" onclick="toggleDesktopDropdown()" alt="Profile">
+            </div>
+        </header>
+
+        <!-- Desktop Dropdown Menu -->
+        <div class="mobile-dropdown" id="desktopDropdown">
+            <div class="mobile-dropdown-item" onclick="showPage('home'); closeDesktopDropdown()">
+                <i class="fas fa-home"></i> Home
+            </div>
+            <div class="mobile-dropdown-item" onclick="showPage('reels'); closeDesktopDropdown()">
+                <i class="fas fa-film"></i> Reels
+            </div>
+            <div class="mobile-dropdown-item" onclick="showPage('chat'); closeDesktopDropdown()">
+                <i class="fas fa-paper-plane"></i> Messages
+            </div>
+            <div class="mobile-dropdown-item" onclick="showPage('profile'); closeDesktopDropdown()">
+                <i class="fas fa-user"></i> Profile
+            </div>
+            <div class="mobile-dropdown-item" onclick="openCreateModal(); closeDesktopDropdown()">
+                <i class="fas fa-plus-circle"></i> Create
+            </div>
+            <div class="mobile-dropdown-item delete-item" onclick="showDeleteConfirm(); closeDesktopDropdown()">
+                <i class="fas fa-trash-alt"></i> Delete Account
+            </div>
+            <div class="mobile-dropdown-item logout-item" onclick="logout(); closeDesktopDropdown()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </div>
+        </div>
+
+        <!-- Mobile Header with Profile Icon -->
         <div class="mobile-header">
             <div class="logo" onclick="showPage('home')">Connectify</div>
-            <img id="mobileProfileIcon" src="/static/default-profile.jpg" class="profile-icon" onclick="toggleMobileDropdown()" alt="Profile">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="mobileProfileIcon" class="profile-icon" onclick="toggleMobileDropdown()" alt="Profile">
         </div>
 
         <!-- Mobile Dropdown Menu -->
@@ -694,6 +767,15 @@ HTML_TEMPLATE = '''
         
         const BASE_URL = window.location.origin;
 
+        // Desktop dropdown functions
+        function toggleDesktopDropdown() {
+            document.getElementById('desktopDropdown').classList.toggle('active');
+        }
+
+        function closeDesktopDropdown() {
+            document.getElementById('desktopDropdown').classList.remove('active');
+        }
+
         // Mobile dropdown functions
         function toggleMobileDropdown() {
             document.getElementById('mobileDropdown').classList.toggle('active');
@@ -703,9 +785,10 @@ HTML_TEMPLATE = '''
             document.getElementById('mobileDropdown').classList.remove('active');
         }
 
-        // Update mobile profile icon when user data changes
-        function updateMobileProfileIcon() {
+        // Update profile icons when user data changes
+        function updateProfileIcons() {
             if (currentUser && currentUser.pic) {
+                document.getElementById('desktopProfileIcon').src = currentUser.pic;
                 document.getElementById('mobileProfileIcon').src = currentUser.pic;
             }
         }
@@ -741,7 +824,7 @@ HTML_TEMPLATE = '''
                 
                 if (result.success) {
                     currentUser = result.user;
-                    updateMobileProfileIcon();
+                    updateProfileIcons();
                     document.getElementById('auth').style.display = 'none';
                     document.getElementById('app').style.display = 'block';
                     connectSocket();
@@ -770,7 +853,7 @@ HTML_TEMPLATE = '''
                 
                 if (result.success) {
                     currentUser = result.user;
-                    updateMobileProfileIcon();
+                    updateProfileIcons();
                     document.getElementById('auth').style.display = 'none';
                     document.getElementById('app').style.display = 'block';
                     connectSocket();
@@ -838,8 +921,9 @@ HTML_TEMPLATE = '''
             else if (page === 'chat') loadChatList();
             else if (page === 'profile') loadProfile(currentUser.id);
             
-            // Close mobile dropdown after navigation
+            // Close dropdowns after navigation
             closeMobileDropdown();
+            closeDesktopDropdown();
         }
 
         // ==================== EDIT PROFILE FUNCTIONS ====================
@@ -906,7 +990,7 @@ HTML_TEMPLATE = '''
                 
                 if (data.success) {
                     currentUser = data.user;
-                    updateMobileProfileIcon();
+                    updateProfileIcons();
                     closeEditProfileModal();
                     loadProfile(currentUser.id);
                     alert('Profile updated successfully!');
@@ -1686,14 +1770,22 @@ HTML_TEMPLATE = '''
             input.click();
         }
 
-        // Close dropdown when clicking outside
+        // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('mobileDropdown');
-            const profileIcon = document.getElementById('mobileProfileIcon');
+            const mobileDropdown = document.getElementById('mobileDropdown');
+            const desktopDropdown = document.getElementById('desktopDropdown');
+            const mobileIcon = document.getElementById('mobileProfileIcon');
+            const desktopIcon = document.getElementById('desktopProfileIcon');
             
-            if (dropdown && profileIcon) {
-                if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
-                    dropdown.classList.remove('active');
+            if (mobileDropdown && mobileIcon) {
+                if (!mobileDropdown.contains(event.target) && !mobileIcon.contains(event.target)) {
+                    mobileDropdown.classList.remove('active');
+                }
+            }
+            
+            if (desktopDropdown && desktopIcon) {
+                if (!desktopDropdown.contains(event.target) && !desktopIcon.contains(event.target)) {
+                    desktopDropdown.classList.remove('active');
                 }
             }
         });
