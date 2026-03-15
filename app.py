@@ -341,7 +341,7 @@ HTML_TEMPLATE = '''
             background: black;
         }
         
-        /* Stories Section */
+        /* Stories Section - ALWAYS VISIBLE */
         .stories-container {
             background: white;
             border-radius: 12px;
@@ -993,10 +993,9 @@ HTML_TEMPLATE = '''
         
         const BASE_URL = window.location.origin;
 
-        // Dropdown functions
+        // ==================== HELPER FUNCTIONS ====================
         function toggleDropdown(type) {
-            const dropdown = document.getElementById(type + 'Dropdown');
-            dropdown.classList.toggle('active');
+            document.getElementById(type + 'Dropdown').classList.toggle('active');
         }
 
         function closeDropdown(type) {
@@ -1023,6 +1022,7 @@ HTML_TEMPLATE = '''
             }
         }
 
+        // ==================== AUTH FUNCTIONS ====================
         async function register() {
             const data = {
                 username: document.getElementById('reg-username').value,
@@ -1089,7 +1089,11 @@ HTML_TEMPLATE = '''
             socket.on('new_message', handleNewMessage);
             socket.on('new_comment', handleNewComment);
             socket.on('new_reply', handleNewReply);
-            socket.on('new_story', handleNewStory);
+            socket.on('new_story', () => {
+                if (document.getElementById('menu-stories').classList.contains('active')) {
+                    loadStories();
+                }
+            });
             socket.emit('join', {user_id: currentUser.id});
         }
 
@@ -1679,16 +1683,6 @@ HTML_TEMPLATE = '''
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                if (file.size > 100 * 1024 * 1024) {
-                    alert('File too large! Maximum size is 100MB.');
-                    return;
-                }
-                
-                if (!file.type.startsWith('video/')) {
-                    alert('Please select a video file.');
-                    return;
-                }
-                
                 const title = prompt('Enter title for your video:');
                 if (!title) return;
                 
@@ -1702,17 +1696,14 @@ HTML_TEMPLATE = '''
                         body: formData
                     });
                     
-                    const data = await res.json();
-                    
-                    if (data.success) {
+                    if (res.ok) {
                         alert('Video uploaded successfully!');
                         showPage('home');
                     } else {
-                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        alert('Upload failed');
                     }
                 } catch (error) {
-                    console.error('Error uploading file:', error);
-                    alert('Error uploading file: ' + error.message);
+                    alert('Error uploading file');
                 }
             };
             input.click();
@@ -1725,16 +1716,6 @@ HTML_TEMPLATE = '''
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                
-                if (file.size > 100 * 1024 * 1024) {
-                    alert('File too large! Maximum size is 100MB.');
-                    return;
-                }
-                
-                if (!file.type.startsWith('video/')) {
-                    alert('Please select a video file.');
-                    return;
-                }
                 
                 const title = prompt('Enter title for your reel:');
                 if (!title) return;
@@ -1752,17 +1733,14 @@ HTML_TEMPLATE = '''
                         body: formData
                     });
                     
-                    const data = await res.json();
-                    
-                    if (data.success) {
+                    if (res.ok) {
                         alert('Reel uploaded successfully!');
                         showPage('reels');
                     } else {
-                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        alert('Upload failed');
                     }
                 } catch (error) {
-                    console.error('Error uploading reel:', error);
-                    alert('Error uploading reel: ' + error.message);
+                    alert('Error uploading reel');
                 }
             };
             input.click();
@@ -1776,11 +1754,6 @@ HTML_TEMPLATE = '''
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                if (file.size > 50 * 1024 * 1024) {
-                    alert('File too large! Maximum size is 50MB.');
-                    return;
-                }
-                
                 const formData = new FormData();
                 formData.append('story', file);
                 
@@ -1790,19 +1763,16 @@ HTML_TEMPLATE = '''
                         body: formData
                     });
                     
-                    const data = await res.json();
-                    
-                    if (data.success) {
+                    if (res.ok) {
                         alert('Story uploaded successfully!');
                         if (document.getElementById('menu-stories').classList.contains('active')) {
                             loadStories();
                         }
                     } else {
-                        alert('Story upload failed: ' + (data.error || 'Unknown error'));
+                        alert('Upload failed');
                     }
                 } catch (error) {
-                    console.error('Error uploading story:', error);
-                    alert('Error uploading story: ' + error.message);
+                    alert('Error uploading story');
                 }
             };
             input.click();
@@ -1811,52 +1781,56 @@ HTML_TEMPLATE = '''
         // ==================== LOAD HOME ====================
         async function loadHome() {
             try {
-                const res = await fetch(BASE_URL + '/api/videos');
-                const videos = await res.json();
+                // Load videos
+                const videosRes = await fetch(BASE_URL + '/api/videos');
+                const videos = await videosRes.json();
+                
+                // Load stories for the stories bar
+                const storiesRes = await fetch(BASE_URL + '/api/stories');
+                let stories = [];
+                try {
+                    stories = await storiesRes.json();
+                } catch (e) {
+                    stories = [];
+                }
                 
                 let html = '<div class="feed">';
                 
-                // Add stories section
-                try {
-                    const storiesRes = await fetch(BASE_URL + '/api/stories');
-                    const stories = await storiesRes.json();
-                    
-                    if (stories && stories.length > 0) {
-                        html += '<div class="stories-container"><div class="stories-wrapper">';
-                        
-                        // Add "Your Story" option
-                        html += `
-                            <div class="story-item my-story" onclick="uploadStory()">
-                                <div class="story-avatar" style="position: relative;">
-                                    <img src="${currentUser.pic}">
-                                    <span class="plus-icon"><i class="fas fa-plus"></i></span>
-                                </div>
-                                <div class="story-username">Your Story</div>
-                            </div>
-                        `;
-                        
-                        // Add other users' stories
-                        const uniqueUsers = {};
-                        stories.forEach(story => {
-                            if (!uniqueUsers[story.user_id] && story.user_id !== currentUser.id) {
-                                uniqueUsers[story.user_id] = story;
-                                html += `
-                                    <div class="story-item" onclick="viewStories(${story.user_id})">
-                                        <div class="story-avatar">
-                                            <img src="${story.user_pic}">
-                                        </div>
-                                        <div class="story-username">${story.username}</div>
+                // ALWAYS show stories section with "Your Story"
+                html += '<div class="stories-container"><div class="stories-wrapper">';
+                
+                // Add "Your Story" option - ALWAYS VISIBLE
+                html += `
+                    <div class="story-item my-story" onclick="uploadStory()">
+                        <div class="story-avatar" style="position: relative;">
+                            <img src="${currentUser.pic}">
+                            <span class="plus-icon"><i class="fas fa-plus"></i></span>
+                        </div>
+                        <div class="story-username">Your Story</div>
+                    </div>
+                `;
+                
+                // Add other users' stories if they exist
+                if (stories && stories.length > 0) {
+                    const uniqueUsers = {};
+                    stories.forEach(story => {
+                        if (!uniqueUsers[story.user_id] && story.user_id !== currentUser.id) {
+                            uniqueUsers[story.user_id] = story;
+                            html += `
+                                <div class="story-item" onclick="viewStories(${story.user_id})">
+                                    <div class="story-avatar">
+                                        <img src="${story.user_pic}">
                                     </div>
-                                `;
-                            }
-                        });
-                        
-                        html += '</div></div>';
-                    }
-                } catch (e) {
-                    console.log('No stories available');
+                                    <div class="story-username">${story.username}</div>
+                                </div>
+                            `;
+                        }
+                    });
                 }
                 
+                html += '</div></div>';
+                
+                // Add videos
                 if (videos.length === 0) {
                     html += '<p style="text-align: center; padding: 50px;">No videos yet. Be the first to upload!</p>';
                 } else {
@@ -1895,13 +1869,14 @@ HTML_TEMPLATE = '''
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
                 
+                // Load comments for each video
                 videos.forEach(v => {
                     loadComments(v.id, `comments-list-${v.id}`);
                 });
                 
             } catch (error) {
                 console.error('Error loading home:', error);
-                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading content. Please try again.</p>';
+                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading content.</p>';
             }
         }
 
@@ -1945,7 +1920,7 @@ HTML_TEMPLATE = '''
                 });
             } catch (error) {
                 console.error('Error loading reels:', error);
-                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading reels. Please try again.</p>';
+                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading reels.</p>';
             }
         }
 
@@ -2031,7 +2006,7 @@ HTML_TEMPLATE = '''
                 
             } catch (error) {
                 console.error('Error loading stories:', error);
-                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading stories. Please try again.</p>';
+                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading stories.</p>';
             }
         }
 
@@ -2126,12 +2101,6 @@ HTML_TEMPLATE = '''
             const video = document.querySelector('#storyMedia video');
             if (video) {
                 video.pause();
-            }
-        }
-
-        function handleNewStory(data) {
-            if (document.getElementById('menu-stories').classList.contains('active')) {
-                loadStories();
             }
         }
 
