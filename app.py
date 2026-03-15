@@ -61,6 +61,15 @@ HTML_TEMPLATE = '''
             cursor: pointer;
             object-fit: cover;
             border: 2px solid #667eea;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mobile-header .profile-icon.fallback {
+            font-size: 20px;
+            color: #667eea;
+            background-color: #e0e0e0;
         }
         
         /* Mobile Dropdown Menu */
@@ -513,7 +522,10 @@ HTML_TEMPLATE = '''
         <!-- Mobile Header with Profile Icon -->
         <div class="mobile-header">
             <div class="logo" onclick="showPage('home')">Connectify</div>
-            <img id="mobileProfileIcon" src="" class="profile-icon" onclick="toggleMobileDropdown()" alt="Profile">
+            <div id="mobileProfileIcon" class="profile-icon" onclick="toggleMobileDropdown()">
+                <!-- Initial fallback icon -->
+                <i class="fas fa-user"></i>
+            </div>
         </div>
 
         <!-- Mobile Dropdown Menu -->
@@ -704,8 +716,13 @@ HTML_TEMPLATE = '''
 
         // Update mobile profile icon when user data changes
         function updateMobileProfileIcon() {
+            const iconContainer = document.getElementById('mobileProfileIcon');
             if (currentUser && currentUser.pic) {
-                document.getElementById('mobileProfileIcon').src = currentUser.pic;
+                // If user has a profile picture, show it as an image
+                iconContainer.innerHTML = `<img src="${currentUser.pic}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                // Show fallback icon
+                iconContainer.innerHTML = '<i class="fas fa-user"></i>';
             }
         }
 
