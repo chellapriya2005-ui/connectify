@@ -306,22 +306,40 @@ HTML_TEMPLATE = '''
             margin-top: 5px;
         }
         
-        .reels-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-        .reel { background: white; border-radius: 12px; overflow: hidden; }
+        /* Updated Reels Grid for better display */
+        .reels-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 20px; 
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .reel { 
+            background: white; 
+            border-radius: 12px; 
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .reel:hover {
+            transform: scale(1.02);
+        }
         .reel-media { 
             aspect-ratio: 9/16; 
             background: black;
             display: flex;
             justify-content: center;
             align-items: center;
+            cursor: pointer;
         }
         .reel-media video { 
-            width: auto;
-            height: auto;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: scale-down;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             background: black;
+        }
+        .reel-media video:hover {
+            opacity: 0.9;
         }
         
         .chat-container { background: white; border-radius: 12px; height: 70vh; display: flex; flex-direction: column; }
@@ -1502,6 +1520,7 @@ HTML_TEMPLATE = '''
             }
         }
 
+        // ==================== FIXED LOAD REELS FUNCTION WITH AUTOPLAY ====================
         async function loadReels() {
             try {
                 const res = await fetch(BASE_URL + '/api/reels');
@@ -1515,7 +1534,7 @@ HTML_TEMPLATE = '''
                         html += `
                             <div class="reel">
                                 <div class="reel-media">
-                                    <video src="${BASE_URL}${r.file_path}" loop muted playsinline></video>
+                                    <video src="${BASE_URL}${r.file_path}" loop muted playsinline autoplay></video>
                                 </div>
                                 <div style="padding: 10px;">
                                     <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"> ${r.full_name}<br>
@@ -1527,6 +1546,13 @@ HTML_TEMPLATE = '''
                 }
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
+                
+                // Force play all videos after they're loaded
+                setTimeout(() => {
+                    document.querySelectorAll('.reel-media video').forEach(video => {
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                    });
+                }, 100);
             } catch (error) {
                 console.error('Error loading reels:', error);
             }
