@@ -326,6 +326,63 @@ def follow_status(user_id):
     following = Follow.query.filter_by(follower_id=session['user_id'], followed_id=user_id).first()
     return jsonify({'status': 'following' if following else 'none'})
 
+# ==================== FOLLOWERS/FOLLOWING LIST ROUTES ====================
+@app.route('/api/followers/<int:user_id>')
+def get_followers(user_id):
+    if not session.get('user_id'):
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    followers = Follow.query.filter_by(followed_id=user_id).all()
+    follower_users = []
+    for follow in followers:
+        user = User.query.get(follow.follower_id)
+        if user:
+            # Check if current user follows this follower
+            is_following = Follow.query.filter_by(
+                follower_id=session['user_id'], 
+                followed_id=user.id
+            ).first() is not None
+            
+            follower_users.append({
+                'id': user.id,
+                'username': user.username,
+                'full_name': user.full_name,
+                'profile_pic': user.profile_pic,
+                'bio': user.bio,
+                'is_following': is_following,
+                'is_current_user': user.id == session['user_id']
+            })
+    
+    return jsonify(follower_users)
+
+@app.route('/api/following/<int:user_id>')
+def get_following(user_id):
+    if not session.get('user_id'):
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    following = Follow.query.filter_by(follower_id=user_id).all()
+    following_users = []
+    for follow in following:
+        user = User.query.get(follow.followed_id)
+        if user:
+            # Check if current user follows this user
+            is_following = Follow.query.filter_by(
+                follower_id=session['user_id'], 
+                followed_id=user.id
+            ).first() is not None
+            
+            following_users.append({
+                'id': user.id,
+                'username': user.username,
+                'full_name': user.full_name,
+                'profile_pic': user.profile_pic,
+                'bio': user.bio,
+                'is_following': is_following,
+                'is_current_user': user.id == session['user_id']
+            })
+    
+    return jsonify(following_users)
+
 # ==================== UPLOAD ROUTES ====================
 @app.route('/upload/video', methods=['POST'])
 def upload_video():
@@ -902,8 +959,123 @@ HTML_TEMPLATE = '''
         .profile-header { background: white; border-radius: 12px; padding: 30px; margin-bottom: 20px; }
         .profile-info { display: flex; gap: 50px; }
         .profile-stats { display: flex; gap: 40px; margin: 20px 0; }
+        .stat-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+        .stat-item:hover {
+            background-color: #f0f0f0;
+        }
+        .stat-number {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #8e8e8e;
+        }
         .follow-btn { background: #667eea; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; }
         .follow-btn.following { background: #dbdbdb; color: #262626; }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background-color: white;
+            width: 400px;
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid #dbdbdb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .modal-close {
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .user-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .user-list-item img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-list-info {
+            flex: 1;
+        }
+        .user-list-username {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .user-list-name {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+        .user-list-follow-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .user-list-follow-btn.following {
+            background: #dbdbdb;
+            color: #262626;
+        }
+        .user-list-follow-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
         .create-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .create-modal-content { background: white; border-radius: 20px; width: 400px; padding: 20px; }
@@ -981,6 +1153,34 @@ HTML_TEMPLATE = '''
         <div class="main" id="main"></div>
     </div>
 
+    <!-- Followers Modal -->
+    <div class="modal" id="followersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Followers</h3>
+                <span class="modal-close" onclick="closeFollowersModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="modal-search" id="followersSearch" placeholder="Search" onkeyup="searchFollowers()">
+                <div id="followersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Following Modal -->
+    <div class="modal" id="followingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Following</h3>
+                <span class="modal-close" onclick="closeFollowingModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="modal-search" id="followingSearch" placeholder="Search" onkeyup="searchFollowing()">
+                <div id="followingList"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="create-modal" id="createModal">
         <div class="create-modal-content">
             <h3 style="margin-bottom: 20px;">Create New</h3>
@@ -1004,6 +1204,9 @@ HTML_TEMPLATE = '''
         let socket = null;
         let currentChatUser = null;
         let currentVideoId = null;
+        let currentProfileUserId = null;
+        let followersData = [];
+        let followingData = [];
         
         // Fix for Render - use full URL
         const BASE_URL = window.location.origin;
@@ -1395,6 +1598,159 @@ HTML_TEMPLATE = '''
             }
         }
 
+        // ==================== FOLLOWERS/FOLLOWING MODAL FUNCTIONS ====================
+        function openFollowersModal(userId) {
+            currentProfileUserId = userId;
+            document.getElementById('followersModal').classList.add('active');
+            loadFollowers(userId);
+        }
+
+        function closeFollowersModal() {
+            document.getElementById('followersModal').classList.remove('active');
+        }
+
+        function openFollowingModal(userId) {
+            currentProfileUserId = userId;
+            document.getElementById('followingModal').classList.add('active');
+            loadFollowing(userId);
+        }
+
+        function closeFollowingModal() {
+            document.getElementById('followingModal').classList.remove('active');
+        }
+
+        async function loadFollowers(userId) {
+            try {
+                const res = await fetch(BASE_URL + `/api/followers/${userId}`);
+                followersData = await res.json();
+                displayFollowers(followersData);
+            } catch (error) {
+                console.error('Error loading followers:', error);
+            }
+        }
+
+        async function loadFollowing(userId) {
+            try {
+                const res = await fetch(BASE_URL + `/api/following/${userId}`);
+                followingData = await res.json();
+                displayFollowing(followingData);
+            } catch (error) {
+                console.error('Error loading following:', error);
+            }
+        }
+
+        function displayFollowers(users) {
+            let html = '';
+            users.forEach(u => {
+                const followBtnText = u.is_current_user ? 'You' : (u.is_following ? 'Following' : 'Follow');
+                const followBtnClass = u.is_following ? 'following' : '';
+                const disabled = u.is_current_user ? 'disabled' : '';
+                
+                html += `
+                    <div class="user-list-item">
+                        <img src="${u.profile_pic}" alt="${u.username}">
+                        <div class="user-list-info">
+                            <div class="user-list-username">${u.username}</div>
+                            <div class="user-list-name">${u.full_name}</div>
+                        </div>
+                        <button class="user-list-follow-btn ${followBtnClass}" ${disabled} onclick="followFromModal(${u.id}, this)">
+                            ${followBtnText}
+                        </button>
+                    </div>
+                `;
+            });
+            
+            if (users.length === 0) {
+                html = '<p style="text-align: center; padding: 20px;">No followers yet</p>';
+            }
+            
+            document.getElementById('followersList').innerHTML = html;
+        }
+
+        function displayFollowing(users) {
+            let html = '';
+            users.forEach(u => {
+                const followBtnText = u.is_current_user ? 'You' : (u.is_following ? 'Following' : 'Follow');
+                const followBtnClass = u.is_following ? 'following' : '';
+                const disabled = u.is_current_user ? 'disabled' : '';
+                
+                html += `
+                    <div class="user-list-item">
+                        <img src="${u.profile_pic}" alt="${u.username}">
+                        <div class="user-list-info">
+                            <div class="user-list-username">${u.username}</div>
+                            <div class="user-list-name">${u.full_name}</div>
+                        </div>
+                        <button class="user-list-follow-btn ${followBtnClass}" ${disabled} onclick="followFromModal(${u.id}, this)">
+                            ${followBtnText}
+                        </button>
+                    </div>
+                `;
+            });
+            
+            if (users.length === 0) {
+                html = '<p style="text-align: center; padding: 20px;">Not following anyone yet</p>';
+            }
+            
+            document.getElementById('followingList').innerHTML = html;
+        }
+
+        function searchFollowers() {
+            const searchTerm = document.getElementById('followersSearch').value.toLowerCase();
+            const filtered = followersData.filter(u => 
+                u.username.toLowerCase().includes(searchTerm) || 
+                u.full_name.toLowerCase().includes(searchTerm)
+            );
+            displayFollowers(filtered);
+        }
+
+        function searchFollowing() {
+            const searchTerm = document.getElementById('followingSearch').value.toLowerCase();
+            const filtered = followingData.filter(u => 
+                u.username.toLowerCase().includes(searchTerm) || 
+                u.full_name.toLowerCase().includes(searchTerm)
+            );
+            displayFollowing(filtered);
+        }
+
+        async function followFromModal(userId, btn) {
+            if (userId === currentUser.id) return;
+            
+            try {
+                const res = await fetch(BASE_URL + `/api/follow/${userId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await res.json();
+                
+                if (data.following) {
+                    btn.textContent = 'Following';
+                    btn.classList.add('following');
+                    
+                    // Update the follow button in the other modal if open
+                    if (document.getElementById('followersModal').classList.contains('active')) {
+                        await loadFollowers(currentProfileUserId);
+                    }
+                    if (document.getElementById('followingModal').classList.contains('active')) {
+                        await loadFollowing(currentProfileUserId);
+                    }
+                } else {
+                    btn.textContent = 'Follow';
+                    btn.classList.remove('following');
+                    
+                    // Update the follow button in the other modal if open
+                    if (document.getElementById('followersModal').classList.contains('active')) {
+                        await loadFollowers(currentProfileUserId);
+                    }
+                    if (document.getElementById('followingModal').classList.contains('active')) {
+                        await loadFollowing(currentProfileUserId);
+                    }
+                }
+            } catch (error) {
+                console.error('Error following user:', error);
+            }
+        }
+
         // ==================== LOAD HOME WITH COMMENTS ====================
         async function loadHome() {
             try {
@@ -1612,9 +1968,18 @@ HTML_TEMPLATE = '''
                                 <h2>${profile.username}</h2>
                                 ${followBtn}
                                 <div class="profile-stats">
-                                    <div><strong>${profile.posts}</strong> posts</div>
-                                    <div><strong>${profile.followers}</strong> followers</div>
-                                    <div><strong>${profile.following}</strong> following</div>
+                                    <div class="stat-item" onclick="openFollowersModal(${userId})">
+                                        <div class="stat-number">${profile.followers}</div>
+                                        <div class="stat-label">followers</div>
+                                    </div>
+                                    <div class="stat-item" onclick="openFollowingModal(${userId})">
+                                        <div class="stat-number">${profile.following}</div>
+                                        <div class="stat-label">following</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">${profile.posts}</div>
+                                        <div class="stat-label">posts</div>
+                                    </div>
                                 </div>
                                 <div><strong>${profile.name}</strong></div>
                                 <div>${profile.bio}</div>
