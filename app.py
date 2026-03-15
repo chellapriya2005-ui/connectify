@@ -1686,24 +1686,34 @@ HTML_TEMPLATE = '''
                 const title = prompt('Enter title for your video:');
                 if (!title) return;
                 
+                // Show loading
+                document.getElementById('main').innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 40px;"></i><p>Uploading video...</p></div>';
+                
                 const formData = new FormData();
                 formData.append('video', file);
                 formData.append('title', title);
                 
                 try {
+                    console.log('Uploading video...');
                     const res = await fetch(BASE_URL + '/upload/video', {
                         method: 'POST',
                         body: formData
                     });
                     
-                    if (res.ok) {
+                    const data = await res.json();
+                    console.log('Upload response:', data);
+                    
+                    if (data.success) {
                         alert('Video uploaded successfully!');
                         showPage('home');
                     } else {
-                        alert('Upload failed');
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        showPage('home');
                     }
                 } catch (error) {
-                    alert('Error uploading file');
+                    console.error('Error uploading file:', error);
+                    alert('Error uploading file: ' + error.message);
+                    showPage('home');
                 }
             };
             input.click();
@@ -1722,25 +1732,35 @@ HTML_TEMPLATE = '''
                 
                 const music = prompt('Enter music name:', 'Original Audio');
                 
+                // Show loading
+                document.getElementById('main').innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 40px;"></i><p>Uploading reel...</p></div>';
+                
                 const formData = new FormData();
                 formData.append('reel', file);
                 formData.append('title', title);
                 formData.append('music', music || 'Original Audio');
                 
                 try {
+                    console.log('Uploading reel...');
                     const res = await fetch(BASE_URL + '/upload/reel', {
                         method: 'POST',
                         body: formData
                     });
                     
-                    if (res.ok) {
+                    const data = await res.json();
+                    console.log('Upload response:', data);
+                    
+                    if (data.success) {
                         alert('Reel uploaded successfully!');
                         showPage('reels');
                     } else {
-                        alert('Upload failed');
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        showPage('reels');
                     }
                 } catch (error) {
-                    alert('Error uploading reel');
+                    console.error('Error uploading reel:', error);
+                    alert('Error uploading reel: ' + error.message);
+                    showPage('reels');
                 }
             };
             input.click();
@@ -1754,25 +1774,36 @@ HTML_TEMPLATE = '''
                 const file = e.target.files[0];
                 if (!file) return;
                 
+                const caption = prompt('Add a caption (optional):', '');
+                
+                // Show loading
+                document.getElementById('main').innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 40px;"></i><p>Uploading story...</p></div>';
+                
                 const formData = new FormData();
                 formData.append('story', file);
+                if (caption) formData.append('caption', caption);
                 
                 try {
+                    console.log('Uploading story...');
                     const res = await fetch(BASE_URL + '/upload/story', {
                         method: 'POST',
                         body: formData
                     });
                     
-                    if (res.ok) {
+                    const data = await res.json();
+                    console.log('Upload response:', data);
+                    
+                    if (data.success) {
                         alert('Story uploaded successfully!');
-                        if (document.getElementById('menu-stories').classList.contains('active')) {
-                            loadStories();
-                        }
+                        showPage('home');
                     } else {
-                        alert('Upload failed');
+                        alert('Story upload failed: ' + (data.error || 'Unknown error'));
+                        showPage('home');
                     }
                 } catch (error) {
-                    alert('Error uploading story');
+                    console.error('Error uploading story:', error);
+                    alert('Error uploading story: ' + error.message);
+                    showPage('home');
                 }
             };
             input.click();
@@ -1786,11 +1817,12 @@ HTML_TEMPLATE = '''
                 const videos = await videosRes.json();
                 
                 // Load stories for the stories bar
-                const storiesRes = await fetch(BASE_URL + '/api/stories');
                 let stories = [];
                 try {
+                    const storiesRes = await fetch(BASE_URL + '/api/stories');
                     stories = await storiesRes.json();
                 } catch (e) {
+                    console.log('No stories available');
                     stories = [];
                 }
                 
@@ -1803,7 +1835,7 @@ HTML_TEMPLATE = '''
                 html += `
                     <div class="story-item my-story" onclick="uploadStory()">
                         <div class="story-avatar" style="position: relative;">
-                            <img src="${currentUser.pic}">
+                            <img src="${currentUser ? currentUser.pic : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}">
                             <span class="plus-icon"><i class="fas fa-plus"></i></span>
                         </div>
                         <div class="story-username">Your Story</div>
