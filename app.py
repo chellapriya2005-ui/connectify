@@ -308,7 +308,7 @@ HTML_TEMPLATE = '''
             margin-top: 5px;
         }
         
-        /* Updated Reels Grid for better display */
+        /* Reels Grid */
         .reels-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
@@ -340,9 +340,162 @@ HTML_TEMPLATE = '''
             object-fit: cover;
             background: black;
         }
-        .reel-media video:hover {
-            opacity: 0.9;
+        
+        /* Stories Section */
+        .stories-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            white-space: nowrap;
         }
+        .stories-wrapper {
+            display: inline-flex;
+            gap: 20px;
+        }
+        .story-item {
+            display: inline-block;
+            text-align: center;
+            cursor: pointer;
+            width: 80px;
+        }
+        .story-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
+            margin-bottom: 5px;
+        }
+        .story-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        .story-username {
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .my-story {
+            position: relative;
+        }
+        .my-story .plus-icon {
+            position: absolute;
+            bottom: 25px;
+            right: 5px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            border: 2px solid white;
+        }
+
+        /* Story Viewer */
+        .story-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 3000;
+            display: none;
+            flex-direction: column;
+        }
+        .story-viewer.active {
+            display: flex;
+        }
+        .story-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+            color: white;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .story-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        .story-progress {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 20;
+        }
+        .progress-bar {
+            height: 3px;
+            background: rgba(255,255,255,0.3);
+            flex: 1;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: white;
+            transition: width 5s linear;
+        }
+        .story-media {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .story-media video, .story-media img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .story-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 30;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .story-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            padding: 20px;
+            z-index: 30;
+        }
+        .story-prev { left: 10px; }
+        .story-next { right: 10px; }
         
         .chat-container { background: white; border-radius: 12px; height: 70vh; display: flex; flex-direction: column; }
         .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
@@ -549,162 +702,6 @@ HTML_TEMPLATE = '''
             height: 100%;
             object-fit: cover;
         }
-
-        /* Stories Section */
-        .stories-container {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-        .stories-wrapper {
-            display: inline-flex;
-            gap: 20px;
-        }
-        .story-item {
-            display: inline-block;
-            text-align: center;
-            cursor: pointer;
-            width: 80px;
-        }
-        .story-avatar {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            padding: 3px;
-            background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
-            margin-bottom: 5px;
-        }
-        .story-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid white;
-        }
-        .story-username {
-            font-size: 12px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .my-story {
-            position: relative;
-        }
-        .my-story .plus-icon {
-            position: absolute;
-            bottom: 25px;
-            right: 5px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            border: 2px solid white;
-        }
-
-        /* Story Viewer */
-        .story-viewer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: black;
-            z-index: 3000;
-            display: none;
-            flex-direction: column;
-        }
-        .story-viewer.active {
-            display: flex;
-        }
-        .story-header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 20px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
-            color: white;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .story-header img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid white;
-        }
-        .story-progress {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            gap: 5px;
-            z-index: 20;
-        }
-        .progress-bar {
-            height: 3px;
-            background: rgba(255,255,255,0.3);
-            flex: 1;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: white;
-            transition: width 5s linear;
-        }
-        .story-media {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .story-media video, .story-media img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .story-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 30px;
-            cursor: pointer;
-            z-index: 30;
-            width: 40px;
-            height: 40px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .story-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            color: white;
-            font-size: 40px;
-            cursor: pointer;
-            padding: 20px;
-            z-index: 30;
-        }
-        .story-prev { left: 10px; }
-        .story-next { right: 10px; }
         
         /* Mobile Responsive */
         @media (max-width: 768px) {
@@ -835,7 +832,7 @@ HTML_TEMPLATE = '''
             </div>
         </div>
 
-        <!-- Main Content Area - This is where dynamic content loads -->
+        <!-- Main Content Area -->
         <div class="main" id="main"></div>
     </div>
 
@@ -876,7 +873,6 @@ HTML_TEMPLATE = '''
             </div>
             <div class="modal-body">
                 <form id="editProfileForm" onsubmit="updateProfile(event)">
-                    <!-- Profile Picture Section -->
                     <div style="display: flex; align-items: center; margin-bottom: 20px;">
                         <img id="editProfilePic" src="" style="width: 80px; height: 80px; border-radius: 50%; margin-right: 20px; object-fit: cover;">
                         <div>
@@ -888,19 +884,16 @@ HTML_TEMPLATE = '''
                         </div>
                     </div>
                     
-                    <!-- Username -->
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 5px;">Username</label>
                         <input type="text" id="editUsername" name="username" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required>
                     </div>
                     
-                    <!-- Full Name -->
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 5px;">Full Name</label>
                         <input type="text" id="editFullName" name="full_name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                     
-                    <!-- Bio -->
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 5px;">Bio</label>
                         <textarea id="editBio" name="bio" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: none;" maxlength="150" oninput="updateBioCount()"></textarea>
@@ -909,14 +902,12 @@ HTML_TEMPLATE = '''
                         </div>
                     </div>
                     
-                    <!-- Change Password Link -->
                     <div style="text-align: right; margin-bottom: 15px;">
                         <a href="#" onclick="openPasswordModal(); return false;" style="color: #667eea; text-decoration: none; font-size: 14px;">
                             <i class="fas fa-key"></i> Change Password
                         </a>
                     </div>
                     
-                    <!-- Submit Buttons -->
                     <div style="display: flex; gap: 10px;">
                         <button type="button" onclick="closeEditProfileModal()" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer;">Cancel</button>
                         <button type="submit" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer; font-weight: 600;">Save Changes</button>
@@ -963,10 +954,10 @@ HTML_TEMPLATE = '''
     <div class="create-modal" id="createModal">
         <div class="create-modal-content">
             <h3 style="margin-bottom: 20px; text-align: center;">Create New</h3>
-            <div class="create-option" onclick="uploadFile('video')">
+            <div class="create-option" onclick="uploadVideo()">
                 <i class="fas fa-video"></i> Upload Video Post
             </div>
-            <div class="create-option" onclick="uploadFile('reel')">
+            <div class="create-option" onclick="uploadReel()">
                 <i class="fas fa-film"></i> Upload Reel
             </div>
             <div class="create-option" onclick="uploadStory()">
@@ -1012,7 +1003,6 @@ HTML_TEMPLATE = '''
             document.getElementById(type + 'Dropdown').classList.remove('active');
         }
 
-        // Update profile icons when user data changes
         function updateProfileIcons() {
             if (currentUser && currentUser.pic) {
                 document.getElementById('desktopProfileIcon').src = currentUser.pic;
@@ -1150,7 +1140,6 @@ HTML_TEMPLATE = '''
             else if (page === 'chat') loadChatList();
             else if (page === 'profile') loadProfile(currentUser.id);
             
-            // Close dropdowns after navigation
             closeDropdown('mobile');
             closeDropdown('desktop');
         }
@@ -1682,7 +1671,7 @@ HTML_TEMPLATE = '''
         }
 
         // ==================== UPLOAD FUNCTIONS ====================
-        function uploadFile(type) {
+        function uploadVideo() {
             closeCreateModal();
             const input = document.getElementById('fileInput');
             input.accept = 'video/*';
@@ -1690,34 +1679,22 @@ HTML_TEMPLATE = '''
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                // Check file size (limit to 100MB)
                 if (file.size > 100 * 1024 * 1024) {
                     alert('File too large! Maximum size is 100MB.');
                     return;
                 }
                 
-                // Check file type
                 if (!file.type.startsWith('video/')) {
                     alert('Please select a video file.');
                     return;
                 }
                 
-                const title = prompt('Enter title for your ' + type + ':');
+                const title = prompt('Enter title for your video:');
                 if (!title) return;
                 
                 const formData = new FormData();
                 formData.append('video', file);
                 formData.append('title', title);
-                formData.append('type', type);
-                
-                if (type === 'reel') {
-                    const music = prompt('Enter music name:', 'Original Audio');
-                    formData.append('music', music || 'Original Audio');
-                }
-                
-                // Show uploading indicator
-                const uploadBtn = document.querySelector('.create-option');
-                const originalText = uploadBtn ? uploadBtn.innerHTML : '';
                 
                 try {
                     const res = await fetch(BASE_URL + '/upload/video', {
@@ -1728,18 +1705,64 @@ HTML_TEMPLATE = '''
                     const data = await res.json();
                     
                     if (data.success) {
-                        alert(type.charAt(0).toUpperCase() + type.slice(1) + ' uploaded successfully!');
-                        if (type === 'reel') {
-                            showPage('reels');
-                        } else {
-                            showPage('home');
-                        }
+                        alert('Video uploaded successfully!');
+                        showPage('home');
                     } else {
                         alert('Upload failed: ' + (data.error || 'Unknown error'));
                     }
                 } catch (error) {
                     console.error('Error uploading file:', error);
                     alert('Error uploading file: ' + error.message);
+                }
+            };
+            input.click();
+        }
+
+        function uploadReel() {
+            closeCreateModal();
+            const input = document.getElementById('fileInput');
+            input.accept = 'video/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                if (file.size > 100 * 1024 * 1024) {
+                    alert('File too large! Maximum size is 100MB.');
+                    return;
+                }
+                
+                if (!file.type.startsWith('video/')) {
+                    alert('Please select a video file.');
+                    return;
+                }
+                
+                const title = prompt('Enter title for your reel:');
+                if (!title) return;
+                
+                const music = prompt('Enter music name:', 'Original Audio');
+                
+                const formData = new FormData();
+                formData.append('reel', file);
+                formData.append('title', title);
+                formData.append('music', music || 'Original Audio');
+                
+                try {
+                    const res = await fetch(BASE_URL + '/upload/reel', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        alert('Reel uploaded successfully!');
+                        showPage('reels');
+                    } else {
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error uploading reel:', error);
+                    alert('Error uploading reel: ' + error.message);
                 }
             };
             input.click();
@@ -1753,7 +1776,6 @@ HTML_TEMPLATE = '''
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                // Check file size (limit to 50MB for stories)
                 if (file.size > 50 * 1024 * 1024) {
                     alert('File too large! Maximum size is 50MB.');
                     return;
@@ -1786,7 +1808,7 @@ HTML_TEMPLATE = '''
             input.click();
         }
 
-        // ==================== LOAD HOME WITH COMMENTS ====================
+        // ==================== LOAD HOME ====================
         async function loadHome() {
             try {
                 const res = await fetch(BASE_URL + '/api/videos');
@@ -1794,8 +1816,46 @@ HTML_TEMPLATE = '''
                 
                 let html = '<div class="feed">';
                 
-                // Add stories section at the top of home
-                html += await getStoriesHTML();
+                // Add stories section
+                try {
+                    const storiesRes = await fetch(BASE_URL + '/api/stories');
+                    const stories = await storiesRes.json();
+                    
+                    if (stories && stories.length > 0) {
+                        html += '<div class="stories-container"><div class="stories-wrapper">';
+                        
+                        // Add "Your Story" option
+                        html += `
+                            <div class="story-item my-story" onclick="uploadStory()">
+                                <div class="story-avatar" style="position: relative;">
+                                    <img src="${currentUser.pic}">
+                                    <span class="plus-icon"><i class="fas fa-plus"></i></span>
+                                </div>
+                                <div class="story-username">Your Story</div>
+                            </div>
+                        `;
+                        
+                        // Add other users' stories
+                        const uniqueUsers = {};
+                        stories.forEach(story => {
+                            if (!uniqueUsers[story.user_id] && story.user_id !== currentUser.id) {
+                                uniqueUsers[story.user_id] = story;
+                                html += `
+                                    <div class="story-item" onclick="viewStories(${story.user_id})">
+                                        <div class="story-avatar">
+                                            <img src="${story.user_pic}">
+                                        </div>
+                                        <div class="story-username">${story.username}</div>
+                                    </div>
+                                `;
+                            }
+                        });
+                        
+                        html += '</div></div>';
+                    }
+                } catch (e) {
+                    console.log('No stories available');
+                }
                 
                 if (videos.length === 0) {
                     html += '<p style="text-align: center; padding: 50px;">No videos yet. Be the first to upload!</p>';
@@ -1841,17 +1901,18 @@ HTML_TEMPLATE = '''
                 
             } catch (error) {
                 console.error('Error loading home:', error);
+                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading content. Please try again.</p>';
             }
         }
 
-        // ==================== LOAD REELS FUNCTION ====================
+        // ==================== LOAD REELS ====================
         async function loadReels() {
             try {
                 const res = await fetch(BASE_URL + '/api/reels');
                 const reels = await res.json();
                 
                 let html = '<div class="reels-grid">';
-                if (reels.length === 0) {
+                if (!reels || reels.length === 0) {
                     html = '<p style="text-align: center; padding: 50px;">No reels yet. Create your first reel!</p>';
                 } else {
                     reels.forEach(r => {
@@ -1861,8 +1922,9 @@ HTML_TEMPLATE = '''
                                     <video src="${BASE_URL}${r.file_path}" loop muted playsinline preload="metadata"></video>
                                 </div>
                                 <div style="padding: 10px;">
-                                    <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"> ${r.full_name}<br>
-                                    <small>❤️ ${r.likes} • 🎵 ${r.music}</small>
+                                    <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 5px;"> 
+                                    <strong>${r.full_name}</strong><br>
+                                    <small>❤️ ${r.likes} • 🎵 ${r.music || 'Original Audio'}</small>
                                 </div>
                             </div>
                         `;
@@ -1871,7 +1933,7 @@ HTML_TEMPLATE = '''
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
                 
-                // Add click to play/pause for reels
+                // Add click to play/pause
                 document.querySelectorAll('.reel-media video').forEach(video => {
                     video.addEventListener('click', function() {
                         if (this.paused) {
@@ -1880,70 +1942,14 @@ HTML_TEMPLATE = '''
                             this.pause();
                         }
                     });
-                    
-                    // Start playing when visible
-                    const observer = new IntersectionObserver((entries) => {
-                        entries.forEach(entry => {
-                            if (entry.isIntersecting) {
-                                entry.target.play().catch(e => console.log('Autoplay prevented:', e));
-                            } else {
-                                entry.target.pause();
-                            }
-                        });
-                    }, { threshold: 0.5 });
-                    
-                    observer.observe(video);
                 });
             } catch (error) {
                 console.error('Error loading reels:', error);
+                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading reels. Please try again.</p>';
             }
         }
 
         // ==================== STORY FUNCTIONS ====================
-        async function getStoriesHTML() {
-            try {
-                const res = await fetch(BASE_URL + '/api/stories');
-                const stories = await res.json();
-                
-                if (!stories || stories.length === 0) {
-                    return '';
-                }
-                
-                let html = '<div class="stories-container"><div class="stories-wrapper">';
-                
-                // Add "Your Story" option
-                html += `
-                    <div class="story-item my-story" onclick="uploadStory()">
-                        <div class="story-avatar" style="position: relative;">
-                            <img src="${currentUser.pic}">
-                            <span class="plus-icon"><i class="fas fa-plus"></i></span>
-                        </div>
-                        <div class="story-username">Your Story</div>
-                    </div>
-                `;
-                
-                // Add other users' stories
-                stories.forEach(story => {
-                    if (story.user_id !== currentUser.id) {
-                        html += `
-                            <div class="story-item" onclick="viewStories(${story.user_id})">
-                                <div class="story-avatar" style="background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);">
-                                    <img src="${story.user_pic}">
-                                </div>
-                                <div class="story-username">${story.username}</div>
-                            </div>
-                        `;
-                    }
-                });
-                
-                html += '</div></div>';
-                return html;
-            } catch (error) {
-                console.error('Error loading stories:', error);
-                return '';
-            }
-        }
-
         async function loadStories() {
             try {
                 const res = await fetch(BASE_URL + '/api/stories/all');
@@ -1982,14 +1988,16 @@ HTML_TEMPLATE = '''
                     `;
                     
                     Object.values(userStories).forEach(user => {
-                        html += `
-                            <div class="story-item" onclick="viewStories(${user.user_id})">
-                                <div class="story-avatar" style="background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);">
-                                    <img src="${user.user_pic}">
+                        if (user.user_id !== currentUser.id) {
+                            html += `
+                                <div class="story-item" onclick="viewStories(${user.user_id})">
+                                    <div class="story-avatar">
+                                        <img src="${user.user_pic}">
+                                    </div>
+                                    <div class="story-username">${user.username}</div>
                                 </div>
-                                <div class="story-username">${user.username}</div>
-                            </div>
-                        `;
+                            `;
+                        }
                     });
                     
                     html += '</div></div>';
@@ -2023,6 +2031,7 @@ HTML_TEMPLATE = '''
                 
             } catch (error) {
                 console.error('Error loading stories:', error);
+                document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading stories. Please try again.</p>';
             }
         }
 
@@ -2042,6 +2051,7 @@ HTML_TEMPLATE = '''
                 
             } catch (error) {
                 console.error('Error loading user stories:', error);
+                alert('Error loading stories');
             }
         }
 
@@ -2054,12 +2064,10 @@ HTML_TEMPLATE = '''
             currentStoryIndex = index;
             const story = currentStories[index];
             
-            // Clear previous timer
             if (storyTimer) {
                 clearTimeout(storyTimer);
             }
             
-            // Update progress bars
             let progressHTML = '';
             currentStories.forEach((s, i) => {
                 progressHTML += `
@@ -2070,7 +2078,6 @@ HTML_TEMPLATE = '''
             });
             document.getElementById('storyProgress').innerHTML = progressHTML;
             
-            // Update header
             document.getElementById('storyHeader').innerHTML = `
                 <img src="${story.user_pic}">
                 <div>
@@ -2079,23 +2086,19 @@ HTML_TEMPLATE = '''
                 </div>
             `;
             
-            // Update media
             const isVideo = story.media_type === 'video';
             document.getElementById('storyMedia').innerHTML = isVideo ?
                 `<video src="${BASE_URL}${story.file_path}" autoplay playsinline></video>` :
                 `<img src="${BASE_URL}${story.file_path}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
             
-            // Show viewer
             document.getElementById('storyViewer').classList.add('active');
             
-            // Start progress animation
             const progressFill = document.getElementById(`progress-${index}`);
             if (progressFill) {
                 progressFill.style.width = '100%';
             }
             
-            // Set timer for next story
-            const duration = isVideo ? 15000 : 5000; // 15 seconds for video, 5 seconds for image
+            const duration = isVideo ? 15000 : 5000;
             storyTimer = setTimeout(() => {
                 navigateStory('next');
             }, duration);
@@ -2120,8 +2123,6 @@ HTML_TEMPLATE = '''
             if (storyTimer) {
                 clearTimeout(storyTimer);
             }
-            
-            // Stop any playing video
             const video = document.querySelector('#storyMedia video');
             if (video) {
                 video.pause();
@@ -2129,7 +2130,6 @@ HTML_TEMPLATE = '''
         }
 
         function handleNewStory(data) {
-            // Refresh stories if on stories page
             if (document.getElementById('menu-stories').classList.contains('active')) {
                 loadStories();
             }
@@ -2245,7 +2245,7 @@ HTML_TEMPLATE = '''
             }
         }
 
-        // ==================== LOAD PROFILE FUNCTION ====================
+        // ==================== LOAD PROFILE ====================
         async function loadProfile(userId) {
             try {
                 const [profileRes, videosRes] = await Promise.all([
@@ -2256,13 +2256,11 @@ HTML_TEMPLATE = '''
                 const videos = await videosRes.json();
                 
                 let actionButton = '';
-                // Only show Edit Profile button for the OWNER of the profile
                 if (userId === currentUser.id) {
                     actionButton = `<button class="edit-profile-btn" onclick="openEditProfileModal()">
                         <i class="fas fa-user-edit"></i> Edit Profile
                     </button>`;
                 } else {
-                    // Show Follow/Unfollow button for other users
                     const statusRes = await fetch(BASE_URL + `/api/follow/status/${userId}`);
                     const status = await statusRes.json();
                     actionButton = `<button class="follow-btn ${status.status === 'following' ? 'following' : ''}" onclick="toggleFollow(${userId})">
