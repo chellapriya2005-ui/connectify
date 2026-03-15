@@ -7,7 +7,6 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 import uuid
-import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this'
@@ -15,7 +14,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///connectify.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
-app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v'}
+app.config['ALLOWED_EXTENSIONS'] = {'mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v', 'jpg', 'jpeg', 'png', 'gif'}
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
@@ -26,6 +25,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 os.makedirs('static/uploads/videos', exist_ok=True)
 os.makedirs('static/uploads/reels', exist_ok=True)
 os.makedirs('static/uploads/stories', exist_ok=True)
+os.makedirs('static/uploads/profiles', exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -36,8 +36,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     full_name = db.Column(db.String(100))
-    profile_pic = db.Column(db.String(500), default='https://randomuser.me/api/portraits/lego/1.jpg')
-    bio = db.Column(db.Text, default='Hello! I am new to Connectify')
+    profile_pic = db.Column(db.String(500), default='/static/default-profile.jpg')
+    bio = db.Column(db.Text, default='')
     followers = db.Column(db.Integer, default=0)
     following = db.Column(db.Integer, default=0)
     online = db.Column(db.Boolean, default=False)
@@ -107,7 +107,6 @@ class Story(db.Model):
             'created_at': self.created_at.isoformat()
         }
 
-# ==================== COMMENT MODELS ====================
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -117,7 +116,6 @@ class Comment(db.Model):
     likes = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship('User', backref='comments')
     replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy='dynamic')
     
@@ -147,39 +145,29 @@ class CommentLike(db.Model):
     
     __table_args__ = (db.UniqueConstraint('user_id', 'comment_id', name='unique_comment_like'),)
 
-# Create tables
+# Create tables (NO DUMMY DATA)
 with app.app_context():
     db.create_all()
-    
-    # Create sample users if none exist
-    if User.query.count() == 0:
-        users = [
-            ('yazhini_07', 'Yazhini', 'Dreamer | Creator ✨', 'women/32'),
-            ('aadhirai.21', 'Aadhirai', 'Art lover 🎨', 'women/44'),
-            ('nivetha_09', 'Nivetha', 'Dancer 💃', 'women/46'),
-            ('tharika_23', 'Tharika', 'Photographer 📸', 'women/17'),
-            ('varnika.18', 'Varnika', 'Foodie 🍜', 'women/52'),
-        ]
-        
-        for username, name, bio, pic in users:
-            user = User(
-                username=username,
-                password=generate_password_hash('password123'),
-                full_name=name,
-                profile_pic=f'https://randomuser.me/api/portraits/{pic}.jpg',
-                bio=bio,
-                followers=random.randint(100, 5000),
-                following=random.randint(50, 500)
-            )
-            db.session.add(user)
-        
-        db.session.commit()
-        print("✅ Sample users created")
+    print("✅ Database tables created (No dummy data)")
+
+# Create a default profile image if it doesn't exist
+def create_default_profile():
+    default_profile_path = 'static/default-profile.jpg'
+    if not os.path.exists(default_profile_path):
+        # You can create a simple colored placeholder or copy a default image
+        # For now, we'll just note that it doesn't exist
+        print("⚠️  Default profile image not found at static/default-profile.jpg")
+
+create_default_profile()
 
 # ==================== VIDEO SERVING ROUTE ====================
 @app.route('/static/uploads/<path:filename>')
-def serve_video(filename):
+def serve_upload(filename):
     return send_from_directory('static/uploads', filename)
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 # ==================== AUTH ROUTES ====================
 @app.route('/register', methods=['POST'])
@@ -192,13 +180,13 @@ def register():
         username=data['username'],
         password=generate_password_hash(data['password']),
         full_name=data.get('full_name', data['username']),
-        bio=data.get('bio', 'New to Connectify'),
-        profile_pic=f'https://randomuser.me/api/portraits/{"men" if random.choice([True, False]) else "women"}/{random.randint(1,99)}.jpg'
+        bio=data.get('bio', ''),
+        profile_pic='/static/default-profile.jpg'
     )
     db.session.add(user)
     db.session.commit()
     session['user_id'] = user.id
-    return jsonify({'success': True, 'user': {'id': user.id, 'name': user.full_name, 'pic': user.profile_pic, 'username': user.username}})
+    return jsonify({'success': True, 'user': {'id': user.id, 'name': user.full_name, 'pic': user.profile_pic, 'username': user.username, 'bio': user.bio}})
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -209,7 +197,7 @@ def login():
         user.online = True
         db.session.commit()
         socketio.emit('user_status', {'user_id': user.id, 'online': True})
-        return jsonify({'success': True, 'user': {'id': user.id, 'name': user.full_name, 'pic': user.profile_pic, 'username': user.username}})
+        return jsonify({'success': True, 'user': {'id': user.id, 'name': user.full_name, 'pic': user.profile_pic, 'username': user.username, 'bio': user.bio}})
     return jsonify({'success': False})
 
 @app.route('/logout')
@@ -250,6 +238,12 @@ def delete_account():
             if os.path.exists(file_path):
                 os.remove(file_path)
         
+        # Delete profile picture if not default
+        if user.profile_pic and user.profile_pic != '/static/default-profile.jpg':
+            profile_path = os.path.join('static', user.profile_pic.replace('/static/', ''))
+            if os.path.exists(profile_path):
+                os.remove(profile_path)
+        
         # Delete all user data from database
         Video.query.filter_by(user_id=user_id).delete()
         Story.query.filter_by(user_id=user_id).delete()
@@ -273,6 +267,81 @@ def delete_account():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+# ==================== EDIT PROFILE ROUTES ====================
+@app.route('/api/update-profile', methods=['POST'])
+def update_profile():
+    if not session.get('user_id'):
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Handle form data (for multipart/form-data with file upload)
+    if request.content_type and 'multipart/form-data' in request.content_type:
+        username = request.form.get('username')
+        full_name = request.form.get('full_name')
+        bio = request.form.get('bio')
+        
+        # Check if username is taken by another user
+        if username and username != user.username:
+            existing = User.query.filter_by(username=username).first()
+            if existing:
+                return jsonify({'error': 'Username already taken'}), 400
+            user.username = username
+        
+        if full_name is not None:
+            user.full_name = full_name
+        if bio is not None:
+            user.bio = bio
+        
+        # Handle profile picture upload
+        if 'profile_pic' in request.files:
+            file = request.files['profile_pic']
+            if file and file.filename:
+                # Check if it's an image
+                if file.content_type and file.content_type.startswith('image/'):
+                    filename = secure_filename(file.filename)
+                    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else 'jpg'
+                    unique_filename = f"profile_{user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+                    
+                    file_path = os.path.join('static/uploads/profiles', unique_filename)
+                    file.save(file_path)
+                    
+                    # Delete old profile picture if not default
+                    if user.profile_pic and user.profile_pic != '/static/default-profile.jpg':
+                        old_path = os.path.join('static', user.profile_pic.replace('/static/', ''))
+                        if os.path.exists(old_path):
+                            os.remove(old_path)
+                    
+                    # Update user's profile picture
+                    user.profile_pic = f'/static/uploads/profiles/{unique_filename}'
+    
+    # Handle JSON data (for password update etc)
+    elif request.is_json:
+        data = request.json
+        if 'current_password' in data and 'new_password' in data:
+            current_password = data.get('current_password')
+            new_password = data.get('new_password')
+            
+            if not check_password_hash(user.password, current_password):
+                return jsonify({'error': 'Current password is incorrect'}), 400
+            
+            user.password = generate_password_hash(new_password)
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'name': user.full_name,
+            'pic': user.profile_pic,
+            'bio': user.bio
+        }
+    })
 
 # ==================== LIKE ROUTE ====================
 @app.route('/api/like/<int:video_id>', methods=['POST'])
@@ -509,13 +578,11 @@ def get_comments(video_id):
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
-    # Get top-level comments only
     comments = Comment.query.filter_by(video_id=video_id, parent_id=None)\
         .order_by(Comment.created_at.desc())\
         .paginate(page=page, per_page=per_page)
     
     current_user_id = session.get('user_id')
-    
     result = [c.to_dict(current_user_id) for c in comments.items]
     
     return jsonify({
@@ -556,10 +623,8 @@ def add_comment():
     db.session.add(comment)
     db.session.commit()
     
-    user = User.query.get(session['user_id'])
     comment_data = comment.to_dict(session['user_id'])
     
-    # Broadcast new comment/reply
     if parent_id:
         socketio.emit('new_reply', {
             'parent_id': parent_id,
@@ -582,19 +647,16 @@ def like_comment(comment_id):
     if not comment:
         return jsonify({'error': 'Comment not found'}), 404
     
-    # Check if already liked
     existing_like = CommentLike.query.filter_by(
         user_id=session['user_id'],
         comment_id=comment_id
     ).first()
     
     if existing_like:
-        # Unlike
         db.session.delete(existing_like)
         comment.likes -= 1
         liked = False
     else:
-        # Like
         like = CommentLike(user_id=session['user_id'], comment_id=comment_id)
         db.session.add(like)
         comment.likes += 1
@@ -617,11 +679,9 @@ def delete_comment(comment_id):
     if not comment:
         return jsonify({'error': 'Comment not found'}), 404
     
-    # Only allow user to delete their own comments
     if comment.user_id != session['user_id']:
         return jsonify({'error': 'Unauthorized'}), 403
     
-    # Delete all replies and likes
     CommentLike.query.filter_by(comment_id=comment_id).delete()
     Comment.query.filter_by(parent_id=comment_id).delete()
     db.session.delete(comment)
@@ -739,7 +799,7 @@ def handle_join(data):
     if 'user_id' in data:
         join_room(f'user_{data["user_id"]}')
 
-# ==================== YOUR HTML TEMPLATE ====================
+# ==================== HTML TEMPLATE ====================
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
@@ -777,9 +837,8 @@ HTML_TEMPLATE = '''
         .feed { max-width: 800px; margin: 0 auto; }
         .post { background: white; border-radius: 12px; border: 1px solid #dbdbdb; margin-bottom: 30px; overflow: hidden; }
         .post-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
-        .post-header img { width: 40px; height: 40px; border-radius: 50%; }
+        .post-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         
-        /* Fixed video container for both landscape and portrait */
         .video-container { 
             width: 100%; 
             background: black; 
@@ -819,7 +878,6 @@ HTML_TEMPLATE = '''
             padding: 0 15px 15px;
         }
         
-        /* Comments Section */
         .comments-section {
             padding: 15px;
             border-top: 1px solid #eee;
@@ -837,6 +895,7 @@ HTML_TEMPLATE = '''
             width: 32px;
             height: 32px;
             border-radius: 50%;
+            object-fit: cover;
         }
         
         .comment-content {
@@ -930,7 +989,6 @@ HTML_TEMPLATE = '''
         
         .reels-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
         .reel { background: white; border-radius: 12px; overflow: hidden; }
-        /* Fixed reel container */
         .reel-media { 
             aspect-ratio: 9/16; 
             background: black;
@@ -977,10 +1035,19 @@ HTML_TEMPLATE = '''
             font-size: 14px;
             color: #8e8e8e;
         }
+        .edit-profile-btn { 
+            background: #0095f6; 
+            color: white; 
+            border: none; 
+            padding: 8px 20px; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 20px;
+        }
         .follow-btn { background: #667eea; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; }
         .follow-btn.following { background: #dbdbdb; color: #262626; }
         
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -1083,10 +1150,9 @@ HTML_TEMPLATE = '''
         .chat-list { background: white; border-radius: 12px; }
         .chat-item { display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
         .chat-item:hover { background: #f5f5f5; }
-        .chat-item img { width: 50px; height: 50px; border-radius: 50%; }
+        .chat-item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
         .unread-badge { background: #667eea; color: white; border-radius: 50%; padding: 5px 10px; font-size: 12px; }
         
-        /* Profile posts grid */
         .profile-posts {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1104,7 +1170,6 @@ HTML_TEMPLATE = '''
             object-fit: cover;
         }
         
-        /* Responsive for mobile */
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main { margin-left: 0; }
@@ -1181,6 +1246,98 @@ HTML_TEMPLATE = '''
         </div>
     </div>
 
+    <!-- Edit Profile Modal -->
+    <div class="modal" id="editProfileModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <span class="modal-close" onclick="closeEditProfileModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm" onsubmit="updateProfile(event)">
+                    <!-- Profile Picture Section -->
+                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <img id="editProfilePic" src="" style="width: 80px; height: 80px; border-radius: 50%; margin-right: 20px; object-fit: cover;">
+                        <div>
+                            <label for="profilePicInput" style="background: #667eea; color: white; padding: 8px 16px; border-radius: 5px; cursor: pointer; display: inline-block;">
+                                <i class="fas fa-camera"></i> Change Photo
+                            </label>
+                            <input type="file" id="profilePicInput" accept="image/*" style="display: none;" onchange="previewProfilePic(this)">
+                            <p style="font-size: 12px; color: #999; margin-top: 5px;">JPG or PNG</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Username -->
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Username</label>
+                        <input type="text" id="editUsername" name="username" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required>
+                    </div>
+                    
+                    <!-- Full Name -->
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Full Name</label>
+                        <input type="text" id="editFullName" name="full_name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+                    
+                    <!-- Bio -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Bio</label>
+                        <textarea id="editBio" name="bio" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: none;" maxlength="150" oninput="updateBioCount()"></textarea>
+                        <div style="text-align: right; font-size: 12px; color: #999;">
+                            <span id="bioCount">0</span>/150
+                        </div>
+                    </div>
+                    
+                    <!-- Change Password Link -->
+                    <div style="text-align: right; margin-bottom: 15px;">
+                        <a href="#" onclick="openPasswordModal(); return false;" style="color: #667eea; text-decoration: none; font-size: 14px;">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="closeEditProfileModal()" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer;">Cancel</button>
+                        <button type="submit" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer; font-weight: 600;">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <span class="modal-close" onclick="closePasswordModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm" onsubmit="updatePassword(event)">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Current Password</label>
+                        <input type="password" id="currentPassword" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">New Password</label>
+                        <input type="password" id="newPassword" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required minlength="6">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" required minlength="6">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="closePasswordModal()" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer;">Cancel</button>
+                        <button type="submit" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer; font-weight: 600;">Update Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="create-modal" id="createModal">
         <div class="create-modal-content">
             <h3 style="margin-bottom: 20px;">Create New</h3>
@@ -1208,7 +1365,6 @@ HTML_TEMPLATE = '''
         let followersData = [];
         let followingData = [];
         
-        // Fix for Render - use full URL
         const BASE_URL = window.location.origin;
 
         function switchTab(tab) {
@@ -1338,6 +1494,121 @@ HTML_TEMPLATE = '''
             else if (page === 'profile') loadProfile(currentUser.id);
         }
 
+        // ==================== EDIT PROFILE FUNCTIONS ====================
+        function openEditProfileModal() {
+            document.getElementById('editProfilePic').src = currentUser.pic;
+            document.getElementById('editUsername').value = currentUser.username;
+            document.getElementById('editFullName').value = currentUser.name || '';
+            document.getElementById('editBio').value = currentUser.bio || '';
+            document.getElementById('bioCount').textContent = (currentUser.bio || '').length;
+            document.getElementById('editProfileModal').classList.add('active');
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').classList.remove('active');
+        }
+
+        function openPasswordModal() {
+            closeEditProfileModal();
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        function previewProfilePic(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editProfilePic').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updateBioCount() {
+            const bio = document.getElementById('editBio').value;
+            document.getElementById('bioCount').textContent = bio.length;
+        }
+
+        async function updateProfile(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('username', document.getElementById('editUsername').value);
+            formData.append('full_name', document.getElementById('editFullName').value);
+            formData.append('bio', document.getElementById('editBio').value);
+            
+            const fileInput = document.getElementById('profilePicInput');
+            if (fileInput.files.length > 0) {
+                formData.append('profile_pic', fileInput.files[0]);
+            }
+            
+            try {
+                const res = await fetch(BASE_URL + '/api/update-profile', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    closeEditProfileModal();
+                    loadProfile(currentUser.id);
+                    alert('Profile updated successfully!');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to update profile'));
+                }
+            } catch (error) {
+                alert('Error updating profile: ' + error);
+            }
+        }
+
+        async function updatePassword(event) {
+            event.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match!');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+            
+            try {
+                const res = await fetch(BASE_URL + '/api/update-profile', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    closePasswordModal();
+                    alert('Password updated successfully!');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to update password'));
+                }
+            } catch (error) {
+                alert('Error updating password: ' + error);
+            }
+        }
+
         // ==================== LIKE FUNCTIONS ====================
         async function likeVideo(videoId, element) {
             try {
@@ -1349,7 +1620,6 @@ HTML_TEMPLATE = '''
                 if (data.success) {
                     element.classList.toggle('far');
                     element.classList.toggle('fas');
-                    // Update like count in UI
                     const likeSpan = element.closest('.post-actions').nextElementSibling;
                     if (likeSpan && likeSpan.classList.contains('post-likes')) {
                         likeSpan.innerText = data.likes + ' likes';
@@ -1727,7 +1997,6 @@ HTML_TEMPLATE = '''
                     btn.textContent = 'Following';
                     btn.classList.add('following');
                     
-                    // Update the follow button in the other modal if open
                     if (document.getElementById('followersModal').classList.contains('active')) {
                         await loadFollowers(currentProfileUserId);
                     }
@@ -1738,7 +2007,6 @@ HTML_TEMPLATE = '''
                     btn.textContent = 'Follow';
                     btn.classList.remove('following');
                     
-                    // Update the follow button in the other modal if open
                     if (document.getElementById('followersModal').classList.contains('active')) {
                         await loadFollowers(currentProfileUserId);
                     }
@@ -1796,7 +2064,6 @@ HTML_TEMPLATE = '''
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
                 
-                // Load comments for each video
                 videos.forEach(v => {
                     loadComments(v.id, `comments-list-${v.id}`);
                 });
@@ -1822,7 +2089,7 @@ HTML_TEMPLATE = '''
                                     <video src="${BASE_URL}${r.file_path}" loop muted playsinline></video>
                                 </div>
                                 <div style="padding: 10px;">
-                                    <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%;"> ${r.full_name}<br>
+                                    <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"> ${r.full_name}<br>
                                     <small>❤️ ${r.likes} • 🎵 ${r.music}</small>
                                 </div>
                             </div>
@@ -1880,7 +2147,7 @@ HTML_TEMPLATE = '''
                     <div class="chat-container">
                         <div style="padding: 15px; border-bottom: 1px solid #eee;">
                             <i class="fas fa-arrow-left" onclick="loadChatList()" style="cursor: pointer;"></i>
-                            <img src="${chatUser.pic}" style="width: 40px; height: 40px; border-radius: 50%; margin-left: 10px;">
+                            <img src="${chatUser.pic}" style="width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; object-fit: cover;">
                             <strong>${chatUser.name}</strong>
                         </div>
                         <div class="chat-messages" id="chatMessages">
@@ -1951,11 +2218,13 @@ HTML_TEMPLATE = '''
                 const profile = await profileRes.json();
                 const videos = await videosRes.json();
                 
-                let followBtn = '';
-                if (userId !== currentUser.id) {
+                let actionButton = '';
+                if (userId === currentUser.id) {
+                    actionButton = `<button class="edit-profile-btn" onclick="openEditProfileModal()">Edit Profile</button>`;
+                } else {
                     const statusRes = await fetch(BASE_URL + `/api/follow/status/${userId}`);
                     const status = await statusRes.json();
-                    followBtn = `<button class="follow-btn ${status.status === 'following' ? 'following' : ''}" onclick="toggleFollow(${userId})">
+                    actionButton = `<button class="follow-btn ${status.status === 'following' ? 'following' : ''}" onclick="toggleFollow(${userId})">
                         ${status.status === 'following' ? 'Following ✓' : 'Follow'}
                     </button>`;
                 }
@@ -1963,10 +2232,12 @@ HTML_TEMPLATE = '''
                 let html = `
                     <div class="profile-header">
                         <div class="profile-info">
-                            <img src="${profile.pic}" style="width: 150px; height: 150px; border-radius: 50%;">
+                            <img src="${profile.pic}" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover;">
                             <div>
-                                <h2>${profile.username}</h2>
-                                ${followBtn}
+                                <div style="display: flex; align-items: center; gap: 20px;">
+                                    <h2>${profile.username}</h2>
+                                    ${actionButton}
+                                </div>
                                 <div class="profile-stats">
                                     <div class="stat-item" onclick="openFollowersModal(${userId})">
                                         <div class="stat-number">${profile.followers}</div>
@@ -1982,7 +2253,7 @@ HTML_TEMPLATE = '''
                                     </div>
                                 </div>
                                 <div><strong>${profile.name}</strong></div>
-                                <div>${profile.bio}</div>
+                                <div style="white-space: pre-line;">${profile.bio || ''}</div>
                             </div>
                         </div>
                     </div>
@@ -1994,6 +2265,10 @@ HTML_TEMPLATE = '''
                         <video src="${BASE_URL}${v.file_path}" style="width: 100%; height: 100%; object-fit: cover;"></video>
                     </div>`;
                 });
+                
+                if (videos.length === 0) {
+                    html += '<p style="text-align: center; padding: 50px; grid-column: 1/-1;">No posts yet</p>';
+                }
                 
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
