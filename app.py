@@ -26,7 +26,7 @@ HTML_TEMPLATE = '''
         .app { display: none; }
         
         /* Desktop Sidebar */
-        .sidebar { width: 220px; height: 100vh; background: white; border-right: 1px solid #dbdbdb; position: fixed; left: 0; top: 0; padding: 20px; }
+        .sidebar { width: 220px; height: 100vh; background: white; border-right: 1px solid #dbdbdb; position: fixed; left: 0; top: 0; padding: 20px; z-index: 100; }
         .sidebar .logo { font-size: 24px; font-weight: bold; margin-bottom: 30px; color: #667eea; }
         .sidebar ul { list-style: none; }
         .sidebar li { padding: 15px; margin: 5px 0; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
@@ -34,11 +34,11 @@ HTML_TEMPLATE = '''
         .sidebar li.active { background: #f0f2f5; }
         .sidebar li.delete { color: #ff4444; }
         
-        /* Top Header - NEW */
+        /* Top Header */
         .top-header {
             position: fixed;
             top: 0;
-            left: 220px; /* because sidebar exists */
+            left: 220px;
             right: 0;
             height: 60px;
             background: white;
@@ -99,8 +99,8 @@ HTML_TEMPLATE = '''
             border: 2px solid #667eea;
         }
         
-        /* Mobile Dropdown Menu */
-        .mobile-dropdown {
+        /* Dropdown Menus */
+        .dropdown-menu {
             display: none;
             position: fixed;
             top: 70px;
@@ -112,10 +112,10 @@ HTML_TEMPLATE = '''
             z-index: 1000;
             overflow: hidden;
         }
-        .mobile-dropdown.active {
+        .dropdown-menu.active {
             display: block;
         }
-        .mobile-dropdown-item {
+        .dropdown-item {
             padding: 15px 20px;
             display: flex;
             align-items: center;
@@ -124,31 +124,33 @@ HTML_TEMPLATE = '''
             border-bottom: 1px solid #f0f0f0;
             transition: background 0.3s;
         }
-        .mobile-dropdown-item:hover {
+        .dropdown-item:hover {
             background: #f5f5f5;
         }
-        .mobile-dropdown-item i {
+        .dropdown-item i {
             width: 20px;
             color: #667eea;
         }
-        .mobile-dropdown-item.delete-item {
+        .dropdown-item.delete-item {
             color: #ff4444;
         }
-        .mobile-dropdown-item.delete-item i {
+        .dropdown-item.delete-item i {
             color: #ff4444;
         }
-        .mobile-dropdown-item.logout-item {
+        .dropdown-item.logout-item {
             color: #ed4956;
         }
-        .mobile-dropdown-item.logout-item i {
+        .dropdown-item.logout-item i {
             color: #ed4956;
         }
         
-        /* Main Content - Adjusted for header */
+        /* Main Content */
         .main { 
             margin-left: 220px; 
             margin-top: 60px;
             padding: 20px; 
+            min-height: calc(100vh - 60px);
+            background: #fafafa;
         }
         
         .feed { max-width: 800px; margin: 0 auto; }
@@ -383,7 +385,7 @@ HTML_TEMPLATE = '''
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
+            z-index: 2000;
             justify-content: center;
             align-items: center;
         }
@@ -555,31 +557,31 @@ HTML_TEMPLATE = '''
         <header class="top-header">
             <div class="header-title">Connectify</div>
             <div class="profile-section">
-                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-icon" id="desktopProfileIcon" onclick="toggleDesktopDropdown()" alt="Profile">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-icon" id="desktopProfileIcon" onclick="toggleDropdown('desktop')" alt="Profile">
             </div>
         </header>
 
         <!-- Desktop Dropdown Menu -->
-        <div class="mobile-dropdown" id="desktopDropdown">
-            <div class="mobile-dropdown-item" onclick="showPage('home'); closeDesktopDropdown()">
+        <div class="dropdown-menu" id="desktopDropdown">
+            <div class="dropdown-item" onclick="showPage('home'); closeDropdown('desktop')">
                 <i class="fas fa-home"></i> Home
             </div>
-            <div class="mobile-dropdown-item" onclick="showPage('reels'); closeDesktopDropdown()">
+            <div class="dropdown-item" onclick="showPage('reels'); closeDropdown('desktop')">
                 <i class="fas fa-film"></i> Reels
             </div>
-            <div class="mobile-dropdown-item" onclick="showPage('chat'); closeDesktopDropdown()">
+            <div class="dropdown-item" onclick="showPage('chat'); closeDropdown('desktop')">
                 <i class="fas fa-paper-plane"></i> Messages
             </div>
-            <div class="mobile-dropdown-item" onclick="showPage('profile'); closeDesktopDropdown()">
+            <div class="dropdown-item" onclick="showPage('profile'); closeDropdown('desktop')">
                 <i class="fas fa-user"></i> Profile
             </div>
-            <div class="mobile-dropdown-item" onclick="openCreateModal(); closeDesktopDropdown()">
+            <div class="dropdown-item" onclick="openCreateModal(); closeDropdown('desktop')">
                 <i class="fas fa-plus-circle"></i> Create
             </div>
-            <div class="mobile-dropdown-item delete-item" onclick="showDeleteConfirm(); closeDesktopDropdown()">
+            <div class="dropdown-item delete-item" onclick="showDeleteConfirm(); closeDropdown('desktop')">
                 <i class="fas fa-trash-alt"></i> Delete Account
             </div>
-            <div class="mobile-dropdown-item logout-item" onclick="logout(); closeDesktopDropdown()">
+            <div class="dropdown-item logout-item" onclick="logout(); closeDropdown('desktop')">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </div>
         </div>
@@ -587,34 +589,35 @@ HTML_TEMPLATE = '''
         <!-- Mobile Header with Profile Icon -->
         <div class="mobile-header">
             <div class="logo" onclick="showPage('home')">Connectify</div>
-            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="mobileProfileIcon" class="profile-icon" onclick="toggleMobileDropdown()" alt="Profile">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" id="mobileProfileIcon" class="profile-icon" onclick="toggleDropdown('mobile')" alt="Profile">
         </div>
 
         <!-- Mobile Dropdown Menu -->
-        <div class="mobile-dropdown" id="mobileDropdown">
-            <div class="mobile-dropdown-item" onclick="showPage('home'); closeMobileDropdown()">
+        <div class="dropdown-menu" id="mobileDropdown">
+            <div class="dropdown-item" onclick="showPage('home'); closeDropdown('mobile')">
                 <i class="fas fa-home"></i> Home
             </div>
-            <div class="mobile-dropdown-item" onclick="showPage('reels'); closeMobileDropdown()">
+            <div class="dropdown-item" onclick="showPage('reels'); closeDropdown('mobile')">
                 <i class="fas fa-film"></i> Reels
             </div>
-            <div class="mobile-dropdown-item" onclick="showPage('chat'); closeMobileDropdown()">
+            <div class="dropdown-item" onclick="showPage('chat'); closeDropdown('mobile')">
                 <i class="fas fa-paper-plane"></i> Messages
             </div>
-            <div class="mobile-dropdown-item" onclick="showPage('profile'); closeMobileDropdown()">
+            <div class="dropdown-item" onclick="showPage('profile'); closeDropdown('mobile')">
                 <i class="fas fa-user"></i> Profile
             </div>
-            <div class="mobile-dropdown-item" onclick="openCreateModal(); closeMobileDropdown()">
+            <div class="dropdown-item" onclick="openCreateModal(); closeDropdown('mobile')">
                 <i class="fas fa-plus-circle"></i> Create
             </div>
-            <div class="mobile-dropdown-item delete-item" onclick="showDeleteConfirm(); closeMobileDropdown()">
+            <div class="dropdown-item delete-item" onclick="showDeleteConfirm(); closeDropdown('mobile')">
                 <i class="fas fa-trash-alt"></i> Delete Account
             </div>
-            <div class="mobile-dropdown-item logout-item" onclick="logout(); closeMobileDropdown()">
+            <div class="dropdown-item logout-item" onclick="logout(); closeDropdown('mobile')">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </div>
         </div>
 
+        <!-- Main Content Area - This is where dynamic content loads -->
         <div class="main" id="main"></div>
     </div>
 
@@ -738,6 +741,7 @@ HTML_TEMPLATE = '''
         </div>
     </div>
 
+    <!-- Create Modal -->
     <div class="create-modal" id="createModal">
         <div class="create-modal-content">
             <h3 style="margin-bottom: 20px;">Create New</h3>
@@ -767,22 +771,14 @@ HTML_TEMPLATE = '''
         
         const BASE_URL = window.location.origin;
 
-        // Desktop dropdown functions
-        function toggleDesktopDropdown() {
-            document.getElementById('desktopDropdown').classList.toggle('active');
+        // Dropdown functions
+        function toggleDropdown(type) {
+            const dropdown = document.getElementById(type + 'Dropdown');
+            dropdown.classList.toggle('active');
         }
 
-        function closeDesktopDropdown() {
-            document.getElementById('desktopDropdown').classList.remove('active');
-        }
-
-        // Mobile dropdown functions
-        function toggleMobileDropdown() {
-            document.getElementById('mobileDropdown').classList.toggle('active');
-        }
-
-        function closeMobileDropdown() {
-            document.getElementById('mobileDropdown').classList.remove('active');
+        function closeDropdown(type) {
+            document.getElementById(type + 'Dropdown').classList.remove('active');
         }
 
         // Update profile icons when user data changes
@@ -922,8 +918,8 @@ HTML_TEMPLATE = '''
             else if (page === 'profile') loadProfile(currentUser.id);
             
             // Close dropdowns after navigation
-            closeMobileDropdown();
-            closeDesktopDropdown();
+            closeDropdown('mobile');
+            closeDropdown('desktop');
         }
 
         // ==================== EDIT PROFILE FUNCTIONS ====================
@@ -1642,7 +1638,7 @@ HTML_TEMPLATE = '''
             }
         }
 
-        // ==================== FIXED LOAD PROFILE FUNCTION ====================
+        // ==================== LOAD PROFILE FUNCTION ====================
         async function loadProfile(userId) {
             try {
                 const [profileRes, videosRes] = await Promise.all([
@@ -1653,7 +1649,7 @@ HTML_TEMPLATE = '''
                 const videos = await videosRes.json();
                 
                 let actionButton = '';
-                // IMPORTANT: Only show Edit Profile button for the OWNER of the profile
+                // Only show Edit Profile button for the OWNER of the profile
                 if (userId === currentUser.id) {
                     actionButton = `<button class="edit-profile-btn" onclick="openEditProfileModal()">
                         <i class="fas fa-user-edit"></i> Edit Profile
