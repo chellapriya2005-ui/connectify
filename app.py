@@ -89,6 +89,7 @@ HTML_TEMPLATE = '''
             font-size: 20px;
             font-weight: bold;
             color: #667eea;
+            cursor: pointer;
         }
         .mobile-header .profile-icon {
             width: 40px;
@@ -165,13 +166,14 @@ HTML_TEMPLATE = '''
             justify-content: center;
             align-items: center;
             min-height: 200px;
+            max-height: 600px;
+            overflow: hidden;
         }
         .video-container video { 
-            width: auto;
+            width: 100%;
             height: auto;
-            max-width: 100%;
-            max-height: 500px;
-            object-fit: scale-down;
+            max-height: 600px;
+            object-fit: contain;
             background: black;
         }
         
@@ -491,8 +493,39 @@ HTML_TEMPLATE = '''
             cursor: not-allowed;
         }
         
-        .create-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .create-modal-content { background: white; border-radius: 20px; width: 400px; padding: 20px; }
+        .create-modal { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.8); 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 2000; 
+        }
+        .create-modal-content { 
+            background: white; 
+            border-radius: 20px; 
+            width: 400px; 
+            padding: 20px; 
+        }
+        .create-option {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .create-option:hover {
+            background: #f5f5f5;
+        }
+        .create-option i {
+            margin-right: 10px;
+            color: #667eea;
+        }
         
         .chat-list { background: white; border-radius: 12px; }
         .chat-item { display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
@@ -516,6 +549,162 @@ HTML_TEMPLATE = '''
             height: 100%;
             object-fit: cover;
         }
+
+        /* Stories Section */
+        .stories-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .stories-wrapper {
+            display: inline-flex;
+            gap: 20px;
+        }
+        .story-item {
+            display: inline-block;
+            text-align: center;
+            cursor: pointer;
+            width: 80px;
+        }
+        .story-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
+            margin-bottom: 5px;
+        }
+        .story-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        .story-username {
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .my-story {
+            position: relative;
+        }
+        .my-story .plus-icon {
+            position: absolute;
+            bottom: 25px;
+            right: 5px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            border: 2px solid white;
+        }
+
+        /* Story Viewer */
+        .story-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 3000;
+            display: none;
+            flex-direction: column;
+        }
+        .story-viewer.active {
+            display: flex;
+        }
+        .story-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+            color: white;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .story-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        .story-progress {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 20;
+        }
+        .progress-bar {
+            height: 3px;
+            background: rgba(255,255,255,0.3);
+            flex: 1;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: white;
+            transition: width 5s linear;
+        }
+        .story-media {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .story-media video, .story-media img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .story-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 30;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .story-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            padding: 20px;
+            z-index: 30;
+        }
+        .story-prev { left: 10px; }
+        .story-next { right: 10px; }
         
         /* Mobile Responsive */
         @media (max-width: 768px) {
@@ -530,6 +719,10 @@ HTML_TEMPLATE = '''
             .profile-info { flex-direction: column; gap: 20px; }
             .profile-stats { gap: 20px; }
             .reels-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
+            .story-nav {
+                font-size: 30px;
+                padding: 10px;
+            }
         }
     </style>
 </head>
@@ -563,6 +756,7 @@ HTML_TEMPLATE = '''
             <ul>
                 <li onclick="showPage('home')" class="active" id="menu-home"><i class="fas fa-home"></i> Home</li>
                 <li onclick="showPage('reels')" id="menu-reels"><i class="fas fa-film"></i> Reels</li>
+                <li onclick="showPage('stories')" id="menu-stories"><i class="fas fa-clock"></i> Stories</li>
                 <li onclick="showPage('chat')" id="menu-chat"><i class="fas fa-paper-plane"></i> Messages</li>
                 <li onclick="showPage('profile')" id="menu-profile"><i class="fas fa-user"></i> Profile</li>
                 <li onclick="openCreateModal()"><i class="fas fa-plus-circle"></i> Create</li>
@@ -586,6 +780,9 @@ HTML_TEMPLATE = '''
             </div>
             <div class="dropdown-item" onclick="showPage('reels'); closeDropdown('desktop')">
                 <i class="fas fa-film"></i> Reels
+            </div>
+            <div class="dropdown-item" onclick="showPage('stories'); closeDropdown('desktop')">
+                <i class="fas fa-clock"></i> Stories
             </div>
             <div class="dropdown-item" onclick="showPage('chat'); closeDropdown('desktop')">
                 <i class="fas fa-paper-plane"></i> Messages
@@ -617,6 +814,9 @@ HTML_TEMPLATE = '''
             </div>
             <div class="dropdown-item" onclick="showPage('reels'); closeDropdown('mobile')">
                 <i class="fas fa-film"></i> Reels
+            </div>
+            <div class="dropdown-item" onclick="showPage('stories'); closeDropdown('mobile')">
+                <i class="fas fa-clock"></i> Stories
             </div>
             <div class="dropdown-item" onclick="showPage('chat'); closeDropdown('mobile')">
                 <i class="fas fa-paper-plane"></i> Messages
@@ -762,21 +962,31 @@ HTML_TEMPLATE = '''
     <!-- Create Modal -->
     <div class="create-modal" id="createModal">
         <div class="create-modal-content">
-            <h3 style="margin-bottom: 20px;">Create New</h3>
-            <div onclick="uploadFile('video')" style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; cursor: pointer;">
-                <i class="fas fa-video"></i> Upload Video
+            <h3 style="margin-bottom: 20px; text-align: center;">Create New</h3>
+            <div class="create-option" onclick="uploadFile('video')">
+                <i class="fas fa-video"></i> Upload Video Post
             </div>
-            <div onclick="uploadFile('reel')" style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; cursor: pointer;">
+            <div class="create-option" onclick="uploadFile('reel')">
                 <i class="fas fa-film"></i> Upload Reel
             </div>
-            <div onclick="uploadFile('story')" style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer;">
+            <div class="create-option" onclick="uploadStory()">
                 <i class="fas fa-clock"></i> Add Story
             </div>
-            <button onclick="closeCreateModal()" style="margin-top: 20px; width: 100%; padding: 10px;">Close</button>
+            <button onclick="closeCreateModal()" style="margin-top: 20px; width: 100%; padding: 10px; background: #f0f0f0; border: none; border-radius: 10px; cursor: pointer;">Close</button>
         </div>
     </div>
 
-    <input type="file" id="fileInput" style="display: none;" accept="video/*">
+    <!-- Story Viewer Modal -->
+    <div class="story-viewer" id="storyViewer">
+        <div class="story-progress" id="storyProgress"></div>
+        <div class="story-header" id="storyHeader"></div>
+        <div class="story-close" onclick="closeStoryViewer()">&times;</div>
+        <div class="story-nav story-prev" onclick="navigateStory('prev')">&#10094;</div>
+        <div class="story-nav story-next" onclick="navigateStory('next')">&#10095;</div>
+        <div class="story-media" id="storyMedia"></div>
+    </div>
+
+    <input type="file" id="fileInput" style="display: none;" accept="video/*,image/*">
 
     <script>
         let currentUser = null;
@@ -786,6 +996,9 @@ HTML_TEMPLATE = '''
         let currentProfileUserId = null;
         let followersData = [];
         let followingData = [];
+        let currentStories = [];
+        let currentStoryIndex = 0;
+        let storyTimer = null;
         
         const BASE_URL = window.location.origin;
 
@@ -886,6 +1099,7 @@ HTML_TEMPLATE = '''
             socket.on('new_message', handleNewMessage);
             socket.on('new_comment', handleNewComment);
             socket.on('new_reply', handleNewReply);
+            socket.on('new_story', handleNewStory);
             socket.emit('join', {user_id: currentUser.id});
         }
 
@@ -932,6 +1146,7 @@ HTML_TEMPLATE = '''
             
             if (page === 'home') loadHome();
             else if (page === 'reels') loadReels();
+            else if (page === 'stories') loadStories();
             else if (page === 'chat') loadChatList();
             else if (page === 'profile') loadProfile(currentUser.id);
             
@@ -1466,6 +1681,111 @@ HTML_TEMPLATE = '''
             }
         }
 
+        // ==================== UPLOAD FUNCTIONS ====================
+        function uploadFile(type) {
+            closeCreateModal();
+            const input = document.getElementById('fileInput');
+            input.accept = 'video/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Check file size (limit to 100MB)
+                if (file.size > 100 * 1024 * 1024) {
+                    alert('File too large! Maximum size is 100MB.');
+                    return;
+                }
+                
+                // Check file type
+                if (!file.type.startsWith('video/')) {
+                    alert('Please select a video file.');
+                    return;
+                }
+                
+                const title = prompt('Enter title for your ' + type + ':');
+                if (!title) return;
+                
+                const formData = new FormData();
+                formData.append('video', file);
+                formData.append('title', title);
+                formData.append('type', type);
+                
+                if (type === 'reel') {
+                    const music = prompt('Enter music name:', 'Original Audio');
+                    formData.append('music', music || 'Original Audio');
+                }
+                
+                // Show uploading indicator
+                const uploadBtn = document.querySelector('.create-option');
+                const originalText = uploadBtn ? uploadBtn.innerHTML : '';
+                
+                try {
+                    const res = await fetch(BASE_URL + '/upload/video', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        alert(type.charAt(0).toUpperCase() + type.slice(1) + ' uploaded successfully!');
+                        if (type === 'reel') {
+                            showPage('reels');
+                        } else {
+                            showPage('home');
+                        }
+                    } else {
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                    alert('Error uploading file: ' + error.message);
+                }
+            };
+            input.click();
+        }
+
+        function uploadStory() {
+            closeCreateModal();
+            const input = document.getElementById('fileInput');
+            input.accept = 'image/*,video/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Check file size (limit to 50MB for stories)
+                if (file.size > 50 * 1024 * 1024) {
+                    alert('File too large! Maximum size is 50MB.');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('story', file);
+                
+                try {
+                    const res = await fetch(BASE_URL + '/upload/story', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        alert('Story uploaded successfully!');
+                        if (document.getElementById('menu-stories').classList.contains('active')) {
+                            loadStories();
+                        }
+                    } else {
+                        alert('Story upload failed: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error uploading story:', error);
+                    alert('Error uploading story: ' + error.message);
+                }
+            };
+            input.click();
+        }
+
         // ==================== LOAD HOME WITH COMMENTS ====================
         async function loadHome() {
             try {
@@ -1473,6 +1793,10 @@ HTML_TEMPLATE = '''
                 const videos = await res.json();
                 
                 let html = '<div class="feed">';
+                
+                // Add stories section at the top of home
+                html += await getStoriesHTML();
+                
                 if (videos.length === 0) {
                     html += '<p style="text-align: center; padding: 50px;">No videos yet. Be the first to upload!</p>';
                 } else {
@@ -1485,10 +1809,10 @@ HTML_TEMPLATE = '''
                                     <div><strong>${v.full_name}</strong></div>
                                 </div>
                                 <div class="video-container">
-                                    <video src="${BASE_URL}${v.file_path}" controls playsinline></video>
+                                    <video src="${BASE_URL}${v.file_path}" controls playsinline preload="metadata"></video>
                                 </div>
                                 <div class="post-actions">
-                                    <i class="far fa-heart" onclick="likeVideo(${v.id}, this)"></i>
+                                    <i class="${v.user_liked ? 'fas' : 'far'} fa-heart" onclick="likeVideo(${v.id}, this)"></i>
                                     <i class="far fa-comment" onclick="toggleComments(${v.id})"></i>
                                     <i class="far fa-paper-plane"></i>
                                     <i class="far fa-bookmark"></i>
@@ -1520,7 +1844,7 @@ HTML_TEMPLATE = '''
             }
         }
 
-        // ==================== FIXED LOAD REELS FUNCTION WITH AUTOPLAY ====================
+        // ==================== LOAD REELS FUNCTION ====================
         async function loadReels() {
             try {
                 const res = await fetch(BASE_URL + '/api/reels');
@@ -1534,7 +1858,7 @@ HTML_TEMPLATE = '''
                         html += `
                             <div class="reel">
                                 <div class="reel-media">
-                                    <video src="${BASE_URL}${r.file_path}" loop muted playsinline autoplay></video>
+                                    <video src="${BASE_URL}${r.file_path}" loop muted playsinline preload="metadata"></video>
                                 </div>
                                 <div style="padding: 10px;">
                                     <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"> ${r.full_name}<br>
@@ -1547,17 +1871,271 @@ HTML_TEMPLATE = '''
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
                 
-                // Force play all videos after they're loaded
-                setTimeout(() => {
-                    document.querySelectorAll('.reel-media video').forEach(video => {
-                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                // Add click to play/pause for reels
+                document.querySelectorAll('.reel-media video').forEach(video => {
+                    video.addEventListener('click', function() {
+                        if (this.paused) {
+                            this.play();
+                        } else {
+                            this.pause();
+                        }
                     });
-                }, 100);
+                    
+                    // Start playing when visible
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.play().catch(e => console.log('Autoplay prevented:', e));
+                            } else {
+                                entry.target.pause();
+                            }
+                        });
+                    }, { threshold: 0.5 });
+                    
+                    observer.observe(video);
+                });
             } catch (error) {
                 console.error('Error loading reels:', error);
             }
         }
 
+        // ==================== STORY FUNCTIONS ====================
+        async function getStoriesHTML() {
+            try {
+                const res = await fetch(BASE_URL + '/api/stories');
+                const stories = await res.json();
+                
+                if (!stories || stories.length === 0) {
+                    return '';
+                }
+                
+                let html = '<div class="stories-container"><div class="stories-wrapper">';
+                
+                // Add "Your Story" option
+                html += `
+                    <div class="story-item my-story" onclick="uploadStory()">
+                        <div class="story-avatar" style="position: relative;">
+                            <img src="${currentUser.pic}">
+                            <span class="plus-icon"><i class="fas fa-plus"></i></span>
+                        </div>
+                        <div class="story-username">Your Story</div>
+                    </div>
+                `;
+                
+                // Add other users' stories
+                stories.forEach(story => {
+                    if (story.user_id !== currentUser.id) {
+                        html += `
+                            <div class="story-item" onclick="viewStories(${story.user_id})">
+                                <div class="story-avatar" style="background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);">
+                                    <img src="${story.user_pic}">
+                                </div>
+                                <div class="story-username">${story.username}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                html += '</div></div>';
+                return html;
+            } catch (error) {
+                console.error('Error loading stories:', error);
+                return '';
+            }
+        }
+
+        async function loadStories() {
+            try {
+                const res = await fetch(BASE_URL + '/api/stories/all');
+                const stories = await res.json();
+                
+                let html = '<div class="feed">';
+                
+                if (!stories || stories.length === 0) {
+                    html += '<p style="text-align: center; padding: 50px;">No stories available. Upload a story to get started!</p>';
+                } else {
+                    // Group stories by user
+                    const userStories = {};
+                    stories.forEach(story => {
+                        if (!userStories[story.user_id]) {
+                            userStories[story.user_id] = {
+                                user_id: story.user_id,
+                                username: story.username,
+                                user_pic: story.user_pic,
+                                stories: []
+                            };
+                        }
+                        userStories[story.user_id].stories.push(story);
+                    });
+                    
+                    html += '<div class="stories-container"><div class="stories-wrapper">';
+                    
+                    // Add "Your Story" option
+                    html += `
+                        <div class="story-item my-story" onclick="uploadStory()">
+                            <div class="story-avatar" style="position: relative;">
+                                <img src="${currentUser.pic}">
+                                <span class="plus-icon"><i class="fas fa-plus"></i></span>
+                            </div>
+                            <div class="story-username">Your Story</div>
+                        </div>
+                    `;
+                    
+                    Object.values(userStories).forEach(user => {
+                        html += `
+                            <div class="story-item" onclick="viewStories(${user.user_id})">
+                                <div class="story-avatar" style="background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);">
+                                    <img src="${user.user_pic}">
+                                </div>
+                                <div class="story-username">${user.username}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div></div>';
+                    
+                    // Display recent stories
+                    html += '<h3 style="margin: 20px 0;">Recent Stories</h3>';
+                    stories.slice(0, 10).forEach(story => {
+                        const isVideo = story.media_type === 'video';
+                        html += `
+                            <div class="post" onclick="viewStories(${story.user_id})" style="cursor: pointer;">
+                                <div class="post-header">
+                                    <img src="${story.user_pic}">
+                                    <div>
+                                        <strong>${story.username}</strong>
+                                        <div style="font-size: 12px; color: #999;">${getTimeAgo(story.created_at)}</div>
+                                    </div>
+                                </div>
+                                <div class="video-container" style="max-height: 300px;">
+                                    ${isVideo ? 
+                                        `<video src="${BASE_URL}${story.file_path}" controls playsinline></video>` : 
+                                        `<img src="${BASE_URL}${story.file_path}" style="max-width: 100%; max-height: 300px; object-fit: contain;">`
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += '</div>';
+                document.getElementById('main').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading stories:', error);
+            }
+        }
+
+        async function viewStories(userId) {
+            try {
+                const res = await fetch(BASE_URL + `/api/stories/user/${userId}`);
+                const stories = await res.json();
+                
+                if (!stories || stories.length === 0) {
+                    alert('No stories available');
+                    return;
+                }
+                
+                currentStories = stories;
+                currentStoryIndex = 0;
+                showStory(0);
+                
+            } catch (error) {
+                console.error('Error loading user stories:', error);
+            }
+        }
+
+        function showStory(index) {
+            if (!currentStories || index < 0 || index >= currentStories.length) {
+                closeStoryViewer();
+                return;
+            }
+            
+            currentStoryIndex = index;
+            const story = currentStories[index];
+            
+            // Clear previous timer
+            if (storyTimer) {
+                clearTimeout(storyTimer);
+            }
+            
+            // Update progress bars
+            let progressHTML = '';
+            currentStories.forEach((s, i) => {
+                progressHTML += `
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-${i}" style="width: ${i < index ? '100%' : (i === index ? '0%' : '0%')};"></div>
+                    </div>
+                `;
+            });
+            document.getElementById('storyProgress').innerHTML = progressHTML;
+            
+            // Update header
+            document.getElementById('storyHeader').innerHTML = `
+                <img src="${story.user_pic}">
+                <div>
+                    <strong>${story.username}</strong>
+                    <div style="font-size: 12px;">${getTimeAgo(story.created_at)}</div>
+                </div>
+            `;
+            
+            // Update media
+            const isVideo = story.media_type === 'video';
+            document.getElementById('storyMedia').innerHTML = isVideo ?
+                `<video src="${BASE_URL}${story.file_path}" autoplay playsinline></video>` :
+                `<img src="${BASE_URL}${story.file_path}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+            
+            // Show viewer
+            document.getElementById('storyViewer').classList.add('active');
+            
+            // Start progress animation
+            const progressFill = document.getElementById(`progress-${index}`);
+            if (progressFill) {
+                progressFill.style.width = '100%';
+            }
+            
+            // Set timer for next story
+            const duration = isVideo ? 15000 : 5000; // 15 seconds for video, 5 seconds for image
+            storyTimer = setTimeout(() => {
+                navigateStory('next');
+            }, duration);
+        }
+
+        function navigateStory(direction) {
+            if (direction === 'next') {
+                if (currentStoryIndex < currentStories.length - 1) {
+                    showStory(currentStoryIndex + 1);
+                } else {
+                    closeStoryViewer();
+                }
+            } else if (direction === 'prev') {
+                if (currentStoryIndex > 0) {
+                    showStory(currentStoryIndex - 1);
+                }
+            }
+        }
+
+        function closeStoryViewer() {
+            document.getElementById('storyViewer').classList.remove('active');
+            if (storyTimer) {
+                clearTimeout(storyTimer);
+            }
+            
+            // Stop any playing video
+            const video = document.querySelector('#storyMedia video');
+            if (video) {
+                video.pause();
+            }
+        }
+
+        function handleNewStory(data) {
+            // Refresh stories if on stories page
+            if (document.getElementById('menu-stories').classList.contains('active')) {
+                loadStories();
+            }
+        }
+
+        // ==================== CHAT FUNCTIONS ====================
         async function loadChatList() {
             try {
                 const res = await fetch(BASE_URL + '/api/chat/users');
@@ -1573,7 +2151,7 @@ HTML_TEMPLATE = '''
                                 <img src="${u.pic}">
                                 <div style="flex:1">
                                     <strong>${u.name}</strong> ${u.online ? '<span style="color: #4CAF50;">●</span>' : ''}<br>
-                                    <small>${u.last_msg}</small>
+                                    <small>${u.last_msg || 'No messages yet'}</small>
                                 </div>
                                 ${u.unread ? '<span class="unread-badge">' + u.unread + '</span>' : ''}
                             </div>
@@ -1600,10 +2178,13 @@ HTML_TEMPLATE = '''
                 
                 let html = `
                     <div class="chat-container">
-                        <div style="padding: 15px; border-bottom: 1px solid #eee;">
-                            <i class="fas fa-arrow-left" onclick="loadChatList()" style="cursor: pointer;"></i>
-                            <img src="${chatUser.pic}" style="width: 40px; height: 40px; border-radius: 50%; margin-left: 10px; object-fit: cover;">
-                            <strong>${chatUser.name}</strong>
+                        <div style="padding: 15px; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+                            <i class="fas fa-arrow-left" onclick="loadChatList()" style="cursor: pointer; margin-right: 15px;"></i>
+                            <img src="${chatUser.pic}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover;">
+                            <div>
+                                <strong>${chatUser.name}</strong><br>
+                                <small style="color: #999;">${chatUser.online ? '● Online' : 'Offline'}</small>
+                            </div>
                         </div>
                         <div class="chat-messages" id="chatMessages">
                 `;
@@ -1722,7 +2303,7 @@ HTML_TEMPLATE = '''
                 
                 videos.forEach(v => {
                     html += `<div class="profile-post">
-                        <video src="${BASE_URL}${v.file_path}" style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <video src="${BASE_URL}${v.file_path}" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata"></video>
                     </div>`;
                 });
                 
@@ -1755,43 +2336,6 @@ HTML_TEMPLATE = '''
             document.getElementById('createModal').style.display = 'none';
         }
 
-        function uploadFile(type) {
-            closeCreateModal();
-            const input = document.getElementById('fileInput');
-            input.accept = 'video/*';
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const title = prompt('Enter title:');
-                if (!title) return;
-                
-                const formData = new FormData();
-                formData.append(type, file);
-                formData.append('title', title);
-                if (type === 'reel') {
-                    formData.append('music', prompt('Enter music name:', 'Original Audio') || 'Original Audio');
-                }
-                
-                try {
-                    const res = await fetch(BASE_URL + `/upload/${type}`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (res.ok) {
-                        alert('Upload successful!');
-                        showPage('home');
-                    } else {
-                        alert('Upload failed');
-                    }
-                } catch (error) {
-                    alert('Error uploading file');
-                }
-            };
-            input.click();
-        }
-
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
             const mobileDropdown = document.getElementById('mobileDropdown');
@@ -1811,6 +2355,18 @@ HTML_TEMPLATE = '''
                 }
             }
         });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = ['createModal', 'followersModal', 'followingModal', 'editProfileModal', 'passwordModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    modal.classList.remove('active');
+                    modal.style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>
