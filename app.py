@@ -5,7 +5,7 @@ HTML_TEMPLATE = '''
 <head>
     <title>Connectify</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
@@ -24,6 +24,8 @@ HTML_TEMPLATE = '''
         .auth-btn { width: 100%; padding: 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 16px; cursor: pointer; font-weight: 600; }
         
         .app { display: none; }
+        
+        /* Desktop Sidebar */
         .sidebar { width: 250px; height: 100vh; background: white; border-right: 1px solid #dbdbdb; position: fixed; left: 0; top: 0; padding: 20px; }
         .sidebar .logo { font-size: 24px; font-weight: bold; margin-bottom: 30px; color: #667eea; }
         .sidebar ul { list-style: none; }
@@ -31,6 +33,82 @@ HTML_TEMPLATE = '''
         .sidebar li:hover { background: #f5f5f5; }
         .sidebar li.active { background: #f0f2f5; }
         .sidebar li.delete { color: #ff4444; }
+        
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #dbdbdb;
+            padding: 0 16px;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+        .mobile-header .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .mobile-header .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            object-fit: cover;
+            border: 2px solid #667eea;
+        }
+        
+        /* Mobile Dropdown Menu */
+        .mobile-dropdown {
+            display: none;
+            position: fixed;
+            top: 70px;
+            right: 16px;
+            width: 250px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            overflow: hidden;
+        }
+        .mobile-dropdown.active {
+            display: block;
+        }
+        .mobile-dropdown-item {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.3s;
+        }
+        .mobile-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+        .mobile-dropdown-item i {
+            width: 20px;
+            color: #667eea;
+        }
+        .mobile-dropdown-item.delete-item {
+            color: #ff4444;
+        }
+        .mobile-dropdown-item.delete-item i {
+            color: #ff4444;
+        }
+        .mobile-dropdown-item.logout-item {
+            color: #ed4956;
+        }
+        .mobile-dropdown-item.logout-item i {
+            color: #ed4956;
+        }
+        
+        /* Main Content */
         .main { margin-left: 250px; padding: 20px; }
         
         .feed { max-width: 800px; margin: 0 auto; }
@@ -379,9 +457,15 @@ HTML_TEMPLATE = '''
             object-fit: cover;
         }
         
+        /* Mobile Responsive */
         @media (max-width: 768px) {
             .sidebar { display: none; }
-            .main { margin-left: 0; }
+            .mobile-header { display: flex; }
+            .main { 
+                margin-left: 0; 
+                margin-top: 60px;
+                padding: 16px;
+            }
             .profile-info { flex-direction: column; gap: 20px; }
             .profile-stats { gap: 20px; }
             .reels-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
@@ -412,6 +496,7 @@ HTML_TEMPLATE = '''
     </div>
 
     <div class="app" id="app">
+        <!-- Desktop Sidebar -->
         <div class="sidebar">
             <div class="logo">Connectify</div>
             <ul>
@@ -424,6 +509,38 @@ HTML_TEMPLATE = '''
                 <li onclick="logout()" style="color: #ed4956;"><i class="fas fa-sign-out-alt"></i> Logout</li>
             </ul>
         </div>
+
+        <!-- Mobile Header with Profile Icon -->
+        <div class="mobile-header">
+            <div class="logo" onclick="showPage('home')">Connectify</div>
+            <img id="mobileProfileIcon" src="" class="profile-icon" onclick="toggleMobileDropdown()" alt="Profile">
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <div class="mobile-dropdown" id="mobileDropdown">
+            <div class="mobile-dropdown-item" onclick="showPage('home'); closeMobileDropdown()">
+                <i class="fas fa-home"></i> Home
+            </div>
+            <div class="mobile-dropdown-item" onclick="showPage('reels'); closeMobileDropdown()">
+                <i class="fas fa-film"></i> Reels
+            </div>
+            <div class="mobile-dropdown-item" onclick="showPage('chat'); closeMobileDropdown()">
+                <i class="fas fa-paper-plane"></i> Messages
+            </div>
+            <div class="mobile-dropdown-item" onclick="showPage('profile'); closeMobileDropdown()">
+                <i class="fas fa-user"></i> Profile
+            </div>
+            <div class="mobile-dropdown-item" onclick="openCreateModal(); closeMobileDropdown()">
+                <i class="fas fa-plus-circle"></i> Create
+            </div>
+            <div class="mobile-dropdown-item delete-item" onclick="showDeleteConfirm(); closeMobileDropdown()">
+                <i class="fas fa-trash-alt"></i> Delete Account
+            </div>
+            <div class="mobile-dropdown-item logout-item" onclick="logout(); closeMobileDropdown()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </div>
+        </div>
+
         <div class="main" id="main"></div>
     </div>
 
@@ -576,6 +693,22 @@ HTML_TEMPLATE = '''
         
         const BASE_URL = window.location.origin;
 
+        // Mobile dropdown functions
+        function toggleMobileDropdown() {
+            document.getElementById('mobileDropdown').classList.toggle('active');
+        }
+
+        function closeMobileDropdown() {
+            document.getElementById('mobileDropdown').classList.remove('active');
+        }
+
+        // Update mobile profile icon when user data changes
+        function updateMobileProfileIcon() {
+            if (currentUser && currentUser.pic) {
+                document.getElementById('mobileProfileIcon').src = currentUser.pic;
+            }
+        }
+
         function switchTab(tab) {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
@@ -607,6 +740,7 @@ HTML_TEMPLATE = '''
                 
                 if (result.success) {
                     currentUser = result.user;
+                    updateMobileProfileIcon();
                     document.getElementById('auth').style.display = 'none';
                     document.getElementById('app').style.display = 'block';
                     connectSocket();
@@ -635,6 +769,7 @@ HTML_TEMPLATE = '''
                 
                 if (result.success) {
                     currentUser = result.user;
+                    updateMobileProfileIcon();
                     document.getElementById('auth').style.display = 'none';
                     document.getElementById('app').style.display = 'block';
                     connectSocket();
@@ -701,6 +836,9 @@ HTML_TEMPLATE = '''
             else if (page === 'reels') loadReels();
             else if (page === 'chat') loadChatList();
             else if (page === 'profile') loadProfile(currentUser.id);
+            
+            // Close mobile dropdown after navigation
+            closeMobileDropdown();
         }
 
         // ==================== EDIT PROFILE FUNCTIONS ====================
@@ -767,6 +905,7 @@ HTML_TEMPLATE = '''
                 
                 if (data.success) {
                     currentUser = data.user;
+                    updateMobileProfileIcon();
                     closeEditProfileModal();
                     loadProfile(currentUser.id);
                     alert('Profile updated successfully!');
@@ -1545,6 +1684,18 @@ HTML_TEMPLATE = '''
             };
             input.click();
         }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('mobileDropdown');
+            const profileIcon = document.getElementById('mobileProfileIcon');
+            
+            if (dropdown && profileIcon) {
+                if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            }
+        });
     </script>
 </body>
 </html>
