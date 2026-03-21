@@ -154,6 +154,190 @@ HTML_TEMPLATE = '''
             background: #fafafa;
         }
         
+        /* Reels Grid - 3 columns */
+        .reels-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 20px; 
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .reel-item { 
+            background: white; 
+            border-radius: 12px; 
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .reel-item:hover {
+            transform: scale(1.02);
+        }
+        .reel-thumbnail { 
+            aspect-ratio: 9/16; 
+            background: black;
+            position: relative;
+            overflow: hidden;
+        }
+        .reel-thumbnail video { 
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .reel-thumbnail .play-overlay {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .reel-info {
+            padding: 10px;
+        }
+        .reel-info img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        /* Instagram-like Reels Player */
+        .reels-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+        .reels-player.active {
+            display: flex;
+        }
+        .reels-container {
+            flex: 1;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        .reel-slide {
+            scroll-snap-align: start;
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: black;
+        }
+        .reel-slide video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .reel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 20px;
+            color: white;
+            z-index: 10;
+        }
+        .reel-user {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .reel-user img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            margin-right: 10px;
+        }
+        .reel-username {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .reel-caption {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .reel-music {
+            font-size: 12px;
+            color: #ccc;
+        }
+        .reel-actions {
+            position: absolute;
+            right: 15px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            z-index: 20;
+        }
+        .reel-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .reel-action i {
+            font-size: 28px;
+            color: white;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .reel-action span {
+            font-size: 12px;
+            color: white;
+        }
+        .reel-action i.fas.fa-heart {
+            color: #ed4956;
+        }
+        .reels-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+            z-index: 30;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .reels-header .close-btn {
+            background: rgba(0,0,0,0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .reels-header .reels-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
         .feed { max-width: 800px; margin: 0 auto; }
         .post { background: white; border-radius: 12px; border: 1px solid #dbdbdb; margin-bottom: 30px; overflow: hidden; }
         .post-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
@@ -308,40 +492,6 @@ HTML_TEMPLATE = '''
             margin-top: 5px;
         }
         
-        /* Reels Grid */
-        .reels-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px; 
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .reel { 
-            background: white; 
-            border-radius: 12px; 
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        .reel:hover {
-            transform: scale(1.02);
-        }
-        .reel-media { 
-            aspect-ratio: 9/16; 
-            background: black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-        .reel-media video { 
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: black;
-        }
-        
-        /* Stories Section - ALWAYS VISIBLE */
         .stories-container {
             background: white;
             border-radius: 12px;
@@ -720,6 +870,13 @@ HTML_TEMPLATE = '''
                 font-size: 30px;
                 padding: 10px;
             }
+            .reel-actions {
+                right: 10px;
+                bottom: 80px;
+            }
+            .reel-action i {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -834,6 +991,16 @@ HTML_TEMPLATE = '''
 
         <!-- Main Content Area -->
         <div class="main" id="main"></div>
+    </div>
+
+    <!-- Reels Player -->
+    <div class="reels-player" id="reelsPlayer">
+        <div class="reels-header">
+            <div class="close-btn" onclick="closeReelsPlayer()">&times;</div>
+            <div class="reels-title">Reels</div>
+            <div style="width: 40px;"></div>
+        </div>
+        <div class="reels-container" id="reelsContainer"></div>
     </div>
 
     <!-- Followers Modal -->
@@ -990,6 +1157,8 @@ HTML_TEMPLATE = '''
         let currentStories = [];
         let currentStoryIndex = 0;
         let storyTimer = null;
+        let allReels = [];
+        let currentReelIndex = 0;
         
         const BASE_URL = window.location.origin;
 
@@ -1282,6 +1451,31 @@ HTML_TEMPLATE = '''
                 }
             } catch (error) {
                 console.error('Error liking video:', error);
+            }
+        }
+
+        // ==================== REEL LIKE FUNCTIONS ====================
+        async function likeReel(reelId, element) {
+            try {
+                const res = await fetch(BASE_URL + '/api/like/' + reelId, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const icon = element.querySelector('i');
+                    const countSpan = element.querySelector('span');
+                    if (data.liked) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                    }
+                    countSpan.textContent = data.likes;
+                }
+            } catch (error) {
+                console.error('Error liking reel:', error);
             }
         }
 
@@ -1686,7 +1880,6 @@ HTML_TEMPLATE = '''
                 const title = prompt('Enter title for your video:');
                 if (!title) return;
                 
-                // Show loading
                 document.getElementById('main').innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 40px;"></i><p>Uploading video...</p></div>';
                 
                 const formData = new FormData();
@@ -1694,14 +1887,12 @@ HTML_TEMPLATE = '''
                 formData.append('title', title);
                 
                 try {
-                    console.log('Uploading video...');
                     const res = await fetch(BASE_URL + '/upload/video', {
                         method: 'POST',
                         body: formData
                     });
                     
                     const data = await res.json();
-                    console.log('Upload response:', data);
                     
                     if (data.success) {
                         alert('Video uploaded successfully!');
@@ -1732,7 +1923,6 @@ HTML_TEMPLATE = '''
                 
                 const music = prompt('Enter music name:', 'Original Audio');
                 
-                // Show loading
                 document.getElementById('main').innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 40px;"></i><p>Uploading reel...</p></div>';
                 
                 const formData = new FormData();
@@ -1741,14 +1931,12 @@ HTML_TEMPLATE = '''
                 formData.append('music', music || 'Original Audio');
                 
                 try {
-                    console.log('Uploading reel...');
                     const res = await fetch(BASE_URL + '/upload/reel', {
                         method: 'POST',
                         body: formData
                     });
                     
                     const data = await res.json();
-                    console.log('Upload response:', data);
                     
                     if (data.success) {
                         alert('Reel uploaded successfully!');
@@ -1776,7 +1964,6 @@ HTML_TEMPLATE = '''
                 
                 const caption = prompt('Add a caption (optional):', '');
                 
-                // Show loading
                 document.getElementById('main').innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin" style="font-size: 40px;"></i><p>Uploading story...</p></div>';
                 
                 const formData = new FormData();
@@ -1784,14 +1971,12 @@ HTML_TEMPLATE = '''
                 if (caption) formData.append('caption', caption);
                 
                 try {
-                    console.log('Uploading story...');
                     const res = await fetch(BASE_URL + '/upload/story', {
                         method: 'POST',
                         body: formData
                     });
                     
                     const data = await res.json();
-                    console.log('Upload response:', data);
                     
                     if (data.success) {
                         alert('Story uploaded successfully!');
@@ -1812,11 +1997,9 @@ HTML_TEMPLATE = '''
         // ==================== LOAD HOME ====================
         async function loadHome() {
             try {
-                // Load videos
                 const videosRes = await fetch(BASE_URL + '/api/videos');
                 const videos = await videosRes.json();
                 
-                // Load stories for the stories bar
                 let stories = [];
                 try {
                     const storiesRes = await fetch(BASE_URL + '/api/stories');
@@ -1828,10 +2011,8 @@ HTML_TEMPLATE = '''
                 
                 let html = '<div class="feed">';
                 
-                // ALWAYS show stories section with "Your Story"
                 html += '<div class="stories-container"><div class="stories-wrapper">';
                 
-                // Add "Your Story" option - ALWAYS VISIBLE
                 html += `
                     <div class="story-item my-story" onclick="uploadStory()">
                         <div class="story-avatar" style="position: relative;">
@@ -1842,7 +2023,6 @@ HTML_TEMPLATE = '''
                     </div>
                 `;
                 
-                // Add other users' stories if they exist
                 if (stories && stories.length > 0) {
                     const uniqueUsers = {};
                     stories.forEach(story => {
@@ -1862,7 +2042,6 @@ HTML_TEMPLATE = '''
                 
                 html += '</div></div>';
                 
-                // Add videos
                 if (videos.length === 0) {
                     html += '<p style="text-align: center; padding: 50px;">No videos yet. Be the first to upload!</p>';
                 } else {
@@ -1901,7 +2080,6 @@ HTML_TEMPLATE = '''
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
                 
-                // Load comments for each video
                 videos.forEach(v => {
                     loadComments(v.id, `comments-list-${v.id}`);
                 });
@@ -1917,21 +2095,25 @@ HTML_TEMPLATE = '''
             try {
                 const res = await fetch(BASE_URL + '/api/reels');
                 const reels = await res.json();
+                allReels = reels;
                 
                 let html = '<div class="reels-grid">';
                 if (!reels || reels.length === 0) {
                     html = '<p style="text-align: center; padding: 50px;">No reels yet. Create your first reel!</p>';
                 } else {
-                    reels.forEach(r => {
+                    reels.forEach((r, index) => {
                         html += `
-                            <div class="reel">
-                                <div class="reel-media">
-                                    <video src="${BASE_URL}${r.file_path}" loop muted playsinline preload="metadata"></video>
+                            <div class="reel-item" onclick="openReelsPlayer(${index})">
+                                <div class="reel-thumbnail">
+                                    <video src="${BASE_URL}${r.file_path}" muted preload="metadata"></video>
+                                    <div class="play-overlay">
+                                        <i class="fas fa-play"></i>
+                                    </div>
                                 </div>
-                                <div style="padding: 10px;">
-                                    <img src="${r.profile_pic}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 5px;"> 
-                                    <strong>${r.full_name}</strong><br>
-                                    <small>❤️ ${r.likes} • 🎵 ${r.music || 'Original Audio'}</small>
+                                <div class="reel-info">
+                                    <img src="${r.profile_pic}"> 
+                                    <strong>${r.full_name}</strong>
+                                    <div style="font-size: 12px; color: #999;">❤️ ${r.likes} • 🎵 ${r.music || 'Original Audio'}</div>
                                 </div>
                             </div>
                         `;
@@ -1940,20 +2122,151 @@ HTML_TEMPLATE = '''
                 html += '</div>';
                 document.getElementById('main').innerHTML = html;
                 
-                // Add click to play/pause
-                document.querySelectorAll('.reel-media video').forEach(video => {
-                    video.addEventListener('click', function() {
-                        if (this.paused) {
-                            this.play();
-                        } else {
-                            this.pause();
-                        }
+                // Preload thumbnails
+                document.querySelectorAll('.reel-thumbnail video').forEach(video => {
+                    video.addEventListener('mouseenter', function() {
+                        this.play();
+                    });
+                    video.addEventListener('mouseleave', function() {
+                        this.pause();
+                        this.currentTime = 0;
                     });
                 });
             } catch (error) {
                 console.error('Error loading reels:', error);
                 document.getElementById('main').innerHTML = '<p style="text-align: center; padding: 50px;">Error loading reels.</p>';
             }
+        }
+
+        // ==================== REELS PLAYER FUNCTIONS ====================
+        function openReelsPlayer(startIndex) {
+            currentReelIndex = startIndex;
+            const container = document.getElementById('reelsContainer');
+            
+            let html = '';
+            allReels.forEach((reel, idx) => {
+                const likedClass = reel.user_liked ? 'fas' : 'far';
+                html += `
+                    <div class="reel-slide" data-index="${idx}">
+                        <video src="${BASE_URL}${reel.file_path}" playsinline preload="metadata"></video>
+                        <div class="reel-overlay">
+                            <div class="reel-user">
+                                <img src="${reel.profile_pic}" onclick="viewProfile(${reel.user_id})">
+                                <div>
+                                    <div class="reel-username" onclick="viewProfile(${reel.user_id})">${reel.full_name}</div>
+                                    <div class="reel-caption">${reel.title || ''}</div>
+                                    <div class="reel-music"><i class="fas fa-music"></i> ${reel.music || 'Original Audio'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="reel-actions">
+                            <div class="reel-action" onclick="likeReel(${reel.id}, this)">
+                                <i class="${likedClass} fa-heart"></i>
+                                <span>${reel.likes}</span>
+                            </div>
+                            <div class="reel-action" onclick="openReelComments(${reel.id})">
+                                <i class="far fa-comment"></i>
+                                <span>${reel.comments_count || 0}</span>
+                            </div>
+                            <div class="reel-action" onclick="shareReel('${BASE_URL}${reel.file_path}')">
+                                <i class="far fa-paper-plane"></i>
+                                <span>Share</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('reelsPlayer').classList.add('active');
+            
+            // Set up scroll listener for infinite scroll
+            const scrollContainer = document.querySelector('.reels-container');
+            scrollContainer.addEventListener('scroll', onReelScroll);
+            
+            // Play the video at current index
+            playCurrentReel();
+        }
+        
+        function onReelScroll() {
+            const container = document.querySelector('.reels-container');
+            const slides = document.querySelectorAll('.reel-slide');
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.top + containerRect.height / 2;
+            
+            let closestIndex = 0;
+            let minDistance = Infinity;
+            
+            slides.forEach((slide, idx) => {
+                const slideRect = slide.getBoundingClientRect();
+                const slideCenter = slideRect.top + slideRect.height / 2;
+                const distance = Math.abs(containerCenter - slideCenter);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = idx;
+                }
+            });
+            
+            if (closestIndex !== currentReelIndex) {
+                // Pause current video
+                const currentVideo = slides[currentReelIndex]?.querySelector('video');
+                if (currentVideo) {
+                    currentVideo.pause();
+                }
+                
+                currentReelIndex = closestIndex;
+                playCurrentReel();
+            }
+        }
+        
+        function playCurrentReel() {
+            const slides = document.querySelectorAll('.reel-slide');
+            const currentSlide = slides[currentReelIndex];
+            if (currentSlide) {
+                const video = currentSlide.querySelector('video');
+                if (video) {
+                    video.currentTime = 0;
+                    video.play().catch(e => console.log('Auto-play prevented:', e));
+                    
+                    // Loop video
+                    video.onended = () => {
+                        video.play();
+                    };
+                }
+            }
+        }
+        
+        function closeReelsPlayer() {
+            const container = document.getElementById('reelsContainer');
+            const videos = container.querySelectorAll('video');
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+            document.getElementById('reelsPlayer').classList.remove('active');
+            document.querySelector('.reels-container').removeEventListener('scroll', onReelScroll);
+        }
+        
+        function openReelComments(reelId) {
+            // You can implement a comment modal for reels
+            alert('Comments feature coming soon for reels!');
+        }
+        
+        function shareReel(reelUrl) {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Check out this reel!',
+                    url: reelUrl
+                }).catch(console.log);
+            } else {
+                prompt('Copy this link to share:', reelUrl);
+            }
+        }
+        
+        function viewProfile(userId) {
+            closeReelsPlayer();
+            showPage('profile');
+            loadProfile(userId);
         }
 
         // ==================== STORY FUNCTIONS ====================
@@ -1967,7 +2280,6 @@ HTML_TEMPLATE = '''
                 if (!stories || stories.length === 0) {
                     html += '<p style="text-align: center; padding: 50px;">No stories available. Upload a story to get started!</p>';
                 } else {
-                    // Group stories by user
                     const userStories = {};
                     stories.forEach(story => {
                         if (!userStories[story.user_id]) {
@@ -1983,7 +2295,6 @@ HTML_TEMPLATE = '''
                     
                     html += '<div class="stories-container"><div class="stories-wrapper">';
                     
-                    // Add "Your Story" option
                     html += `
                         <div class="story-item my-story" onclick="uploadStory()">
                             <div class="story-avatar" style="position: relative;">
@@ -2009,7 +2320,6 @@ HTML_TEMPLATE = '''
                     
                     html += '</div></div>';
                     
-                    // Display recent stories
                     html += '<h3 style="margin: 20px 0;">Recent Stories</h3>';
                     stories.slice(0, 10).forEach(story => {
                         const isVideo = story.media_type === 'video';
@@ -2357,10 +2667,10 @@ HTML_TEMPLATE = '''
 
         // Close modals when clicking outside
         window.onclick = function(event) {
-            const modals = ['createModal', 'followersModal', 'followingModal', 'editProfileModal', 'passwordModal'];
+            const modals = ['createModal', 'followersModal', 'followingModal', 'editProfileModal', 'passwordModal', 'reelsPlayer'];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
-                if (event.target === modal) {
+                if (event.target === modal && modalId !== 'reelsPlayer') {
                     modal.classList.remove('active');
                     modal.style.display = 'none';
                 }
