@@ -151,53 +151,78 @@ HTML_TEMPLATE = '''
             min-height: 100vh;
         }
         
-        /* Reels Grid - 3 columns */
+        /* Reels Grid - Instagram Style */
         .reels-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 3px;
-            background: black;
-            padding: 0;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 0 10px;
         }
         
-        .reel-thumb {
-            aspect-ratio: 9/16;
+        .reel {
             background: #1a1a1a;
-            position: relative;
-            cursor: pointer;
+            border-radius: 12px;
             overflow: hidden;
+            cursor: pointer;
+            border: 1px solid #262626;
+            position: relative;
         }
         
-        .reel-thumb video {
+        .reel-media {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 9/16;
+            background: black;
+        }
+        
+        .reel-media video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
         
-        .reel-thumb .play-icon {
+        .duration {
             position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
             color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-size: 12px;
         }
         
-        .reel-thumb .likes-count {
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
+        .reel-info {
+            padding: 10px;
             color: white;
-            font-size: 12px;
-            background: rgba(0,0,0,0.6);
-            padding: 2px 6px;
-            border-radius: 12px;
+        }
+        
+        .reel-info small {
+            color: #8e8e8e;
+        }
+        
+        .reel .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,0,0,0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.2s;
+        }
+        
+        .reel .delete-btn:hover {
+            background: red;
+            transform: scale(1.1);
         }
         
         /* Fullscreen Reels Player */
@@ -967,6 +992,20 @@ HTML_TEMPLATE = '''
         function connectSocket() {
             socket = io(BASE_URL);
             socket.emit('join', {user_id: currentUser.id});
+            
+            // Listen for new reels
+            socket.on('new_reel', () => {
+                if (document.querySelector('.reels-grid')) {
+                    loadReels();
+                }
+            });
+            
+            // Listen for video deletion
+            socket.on('video_deleted', (data) => {
+                if (document.querySelector('.reels-grid')) {
+                    loadReels();
+                }
+            });
         }
         
         async function logout() {
@@ -988,34 +1027,56 @@ HTML_TEMPLATE = '''
             else if (page === 'profile') loadProfile(currentUser.id);
         }
         
-        // ==================== LOAD REELS ====================
+        // ==================== LOAD REELS - INSTAGRAM STYLE ====================
         async function loadReels() {
             try {
                 const res = await fetch(BASE_URL + '/api/reels');
                 const reels = await res.json();
                 allReels = reels;
                 
-                let html = '<div class="reels-grid">';
+                let html = '<h3 style="color: white; margin-bottom: 20px; padding: 0 10px;">Reels</h3><div class="reels-grid">';
                 
                 if (!reels || reels.length === 0) {
                     html = '<div style="text-align: center; padding: 50px; color: white;">No reels yet. Create your first reel!</div>';
                 } else {
-                    reels.forEach((reel, index) => {
-                        html += `
-                            <div class="reel-thumb" onclick="openReelsPlayer(${index})">
-                                <video src="${BASE_URL}${reel.file_path}" muted preload="metadata"></video>
-                                <div class="play-icon"><i class="fas fa-play"></i></div>
-                                <div class="likes-count">❤️ ${reel.likes}</div>
+                    reels.forEach((reel) => {
+                        const isOwner = currentUser && reel.user_id === currentUser.id;
+                        html += `<div class="reel" id="reel-${reel.id}" style="position:relative;">`;
+                        
+                        // Add delete button if this is the current user's reel
+                        if (isOwner) {
+                            html += `<button class="delete-btn" onclick="event.stopPropagation(); deleteReel(${reel.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>`;
+                        }
+                        
+                        html += `<div class="reel-media" onclick="viewReel('${BASE_URL}${reel.file_path}')">
+                                <video src="${BASE_URL}${reel.file_path}" muted loop></video>
+                                <span class="duration">15s</span>
                             </div>
-                        `;
+                            <div class="reel-info">
+                                <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                                    <img src="${reel.profile_pic}" style="width:25px; height:25px; border-radius:50%;">
+                                    <span>${reel.full_name}</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span>❤️ ${reel.likes || 0}</span>
+                                    <span>👁️ ${reel.views || 0}</span>
+                                </div>
+                                <small>🎵 ${reel.music || 'Original Audio'}</small>
+                            </div>
+                        </div>`;
                     });
                 }
+                
                 html += '</div>';
                 document.getElementById('mainContent').innerHTML = html;
                 
-                // Preload thumbnails with hover play
-                document.querySelectorAll('.reel-thumb video').forEach(video => {
-                    video.addEventListener('mouseenter', () => video.play());
+                // Add hover play effect for reels grid
+                document.querySelectorAll('.reel-media video').forEach(video => {
+                    video.addEventListener('mouseenter', () => {
+                        video.play().catch(e => console.log('Hover play error:', e));
+                    });
                     video.addEventListener('mouseleave', () => {
                         video.pause();
                         video.currentTime = 0;
@@ -1027,138 +1088,64 @@ HTML_TEMPLATE = '''
             }
         }
         
-        // ==================== OPEN REELS PLAYER ====================
-        function openReelsPlayer(startIndex) {
-            currentReelIndex = startIndex;
-            const container = document.getElementById('reelsContainer');
+        // ==================== DELETE REEL ====================
+        async function deleteReel(reelId) {
+            if (!confirm('Are you sure you want to delete this reel?')) return;
             
-            let html = '';
-            allReels.forEach((reel, idx) => {
-                const likedClass = reel.user_liked ? 'fas' : 'far';
-                html += `
-                    <div class="reel-slide" data-index="${idx}">
-                        <video src="${BASE_URL}${reel.file_path}" preload="auto"></video>
-                        <div class="reel-overlay">
-                            <div class="reel-user">
-                                <img src="${reel.profile_pic}" onclick="viewProfile(${reel.user_id})">
-                                <div>
-                                    <div class="reel-username" onclick="viewProfile(${reel.user_id})">${reel.full_name}</div>
-                                    <div class="reel-caption">${reel.title || ''}</div>
-                                    <div class="reel-music"><i class="fas fa-music"></i> ${reel.music || 'Original Audio'}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="reel-actions">
-                            <div class="reel-action" onclick="likeReelInPlayer(${reel.id}, this, ${idx})">
-                                <i class="${likedClass} fa-heart"></i>
-                                <span>${reel.likes}</span>
-                            </div>
-                            <div class="reel-action" onclick="shareReel('${BASE_URL}${reel.file_path}')">
-                                <i class="far fa-paper-plane"></i>
-                                <span>Share</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-            document.getElementById('reelsPlayer').classList.add('active');
-            
-            // Setup scroll listener
-            const scrollContainer = document.querySelector('.reels-container');
-            scrollContainer.addEventListener('scroll', onReelScroll);
-            
-            // Play the current reel
-            setTimeout(() => {
-                playCurrentReel();
-            }, 100);
-        }
-        
-        function onReelScroll() {
-            if (isScrolling) return;
-            isScrolling = true;
-            
-            setTimeout(() => {
-                const slides = document.querySelectorAll('.reel-slide');
-                const scrollContainer = document.querySelector('.reels-container');
-                const scrollTop = scrollContainer.scrollTop;
-                const slideHeight = window.innerHeight;
-                const newIndex = Math.round(scrollTop / slideHeight);
-                
-                if (newIndex !== currentReelIndex && newIndex >= 0 && newIndex < slides.length) {
-                    // Pause current video
-                    const currentVideo = slides[currentReelIndex]?.querySelector('video');
-                    if (currentVideo) {
-                        currentVideo.pause();
-                    }
-                    
-                    currentReelIndex = newIndex;
-                    playCurrentReel();
-                }
-                
-                isScrolling = false;
-            }, 100);
-        }
-        
-        function playCurrentReel() {
-            const slides = document.querySelectorAll('.reel-slide');
-            const currentSlide = slides[currentReelIndex];
-            
-            if (currentSlide) {
-                const video = currentSlide.querySelector('video');
-                if (video) {
-                    video.currentTime = 0;
-                    video.play().catch(e => console.log('Play error:', e));
-                    
-                    // Loop video
-                    video.onended = () => {
-                        video.play().catch(e => console.log('Loop error:', e));
-                    };
-                }
-            }
-        }
-        
-        async function likeReelInPlayer(reelId, element, index) {
             try {
-                const res = await fetch(BASE_URL + '/api/like/' + reelId, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'}
+                const res = await fetch(BASE_URL + '/delete/reel/' + reelId, {
+                    method: 'DELETE'
                 });
                 const data = await res.json();
                 
                 if (data.success) {
-                    const icon = element.querySelector('i');
-                    const countSpan = element.querySelector('span');
-                    
-                    if (data.liked) {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas');
-                    } else {
-                        icon.classList.remove('fas');
-                        icon.classList.add('far');
-                    }
-                    countSpan.textContent = data.likes;
-                    
-                    // Update in allReels array
-                    if (allReels[index]) {
-                        allReels[index].likes = data.likes;
-                        allReels[index].user_liked = data.liked;
-                    }
+                    alert('Reel deleted successfully!');
+                    loadReels(); // Refresh the reels grid
+                } else {
+                    alert('Failed to delete reel');
                 }
             } catch (error) {
-                console.error('Error liking reel:', error);
+                console.error('Error deleting reel:', error);
+                alert('Error deleting reel');
             }
         }
         
+        // ==================== VIEW REEL (Fullscreen) ====================
+        function viewReel(path) {
+            const viewer = document.createElement('div');
+            viewer.style.position = 'fixed';
+            viewer.style.top = '0';
+            viewer.style.left = '0';
+            viewer.style.width = '100%';
+            viewer.style.height = '100%';
+            viewer.style.backgroundColor = 'black';
+            viewer.style.zIndex = '5000';
+            viewer.style.display = 'flex';
+            viewer.style.alignItems = 'center';
+            viewer.style.justifyContent = 'center';
+            viewer.innerHTML = `
+                <video src="${path}" controls autoplay style="max-width: 100%; max-height: 100%;"></video>
+                <button onclick="this.parentElement.remove()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer;">✕</button>
+            `;
+            document.body.appendChild(viewer);
+        }
+        
+        // ==================== OPEN REELS PLAYER (Keep for compatibility) ====================
+        function openReelsPlayer(startIndex) {
+            // This is kept for compatibility but not used in new design
+            viewReel(allReels[startIndex]?.file_path);
+        }
+        
         function closeReelsPlayer() {
+            // This is kept for compatibility
             const container = document.getElementById('reelsContainer');
-            const videos = container.querySelectorAll('video');
-            videos.forEach(video => {
-                video.pause();
-            });
+            if (container) {
+                const videos = container.querySelectorAll('video');
+                videos.forEach(video => {
+                    video.pause();
+                });
+            }
             document.getElementById('reelsPlayer').classList.remove('active');
-            document.querySelector('.reels-container')?.removeEventListener('scroll', onReelScroll);
         }
         
         function shareReel(url) {
