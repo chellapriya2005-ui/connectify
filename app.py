@@ -375,7 +375,7 @@ HTML_TEMPLATE = '''
             font-size: 16px;
         }
         
-        /* Home Feed */
+        /* Home Feed - FIXED FOR LANDSCAPE VIDEOS (NO BLACK SPACE) */
         .feed {
             max-width: 600px;
             margin: 0 auto;
@@ -406,15 +406,21 @@ HTML_TEMPLATE = '''
             color: white;
         }
         
+        /* FIXED: Landscape videos fill full width, no black space */
         .video-container {
             width: 100%;
             background: black;
+            position: relative;
+            overflow: hidden;
+            max-height: 70vh;
         }
         
         .video-container video {
             width: 100%;
-            max-height: 600px;
-            object-fit: contain;
+            height: auto;
+            min-height: 300px;
+            object-fit: cover;
+            display: block;
         }
         
         .post-actions {
@@ -1162,7 +1168,7 @@ HTML_TEMPLATE = '''
             loadProfile(userId);
         }
         
-        // ==================== LOAD HOME ====================
+        // ==================== LOAD HOME - LANDSCAPE VIDEOS FIXED (NO BLACK SPACE) ====================
         async function loadHome() {
             try {
                 const videosRes = await fetch(BASE_URL + '/api/videos');
@@ -1204,7 +1210,7 @@ HTML_TEMPLATE = '''
                 });
                 html += '</div></div>';
                 
-                // Videos
+                // Videos - FIXED: Landscape videos fill full width, no black space
                 videos.forEach(v => {
                     html += `
                         <div class="post">
@@ -1213,7 +1219,7 @@ HTML_TEMPLATE = '''
                                 <strong>${v.full_name}</strong>
                             </div>
                             <div class="video-container">
-                                <video src="${BASE_URL}${v.file_path}" controls playsinline></video>
+                                <video src="${BASE_URL}${v.file_path}" controls playsinline style="width:100%; height:auto; min-height:300px; object-fit:cover;"></video>
                             </div>
                             <div class="post-actions">
                                 <i class="${v.user_liked ? 'fas' : 'far'} fa-heart" onclick="likeVideo(${v.id}, this)"></i>
